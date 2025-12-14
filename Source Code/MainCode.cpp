@@ -1,7 +1,9 @@
-#include <iostream>
+﻿#include <iostream>
 #include <string>
 #include <vector>
 #include <fstream>
+#include <thread>
+#include <chrono>
 using namespace std;
 
 class UserProfile {
@@ -74,6 +76,14 @@ public:
 
         file << "{\n";
         file << "  \"Logged actions\": [\n";
+
+        file << "{\n";
+        file << "    \"User\": \"" <<  user << "\",\n";
+        file << "    \"Action\": \"" << action << "\"\n";
+        file << "}\n";
+
+        file << "  ]\n";
+        file << "}\n";
     }
     void saveData() {
         ofstream file("userdata.json");
@@ -165,8 +175,24 @@ private:
     vector <string> ActionsPerformed;
     vector <string> UserPerformed;
 };
+void printPrompt() {
+    cout << "\033[36m> \033[0m";
+}
+void clearScreen() {
+    cout << "\033[2J\033[H";
+}
 
 int main() {
+    cout << R"(
+      _____  _____         _____  _______ _     _ _______
+     |_____]   |   |      |     | |       |____/  |______
+     |       __|__ |_____ |_____| |_____  |    \_ ______|                                                                                                                                                                   
+    )" << endl;
+    const string RESET = "\033[0m";
+    const string RED = "\033[31m";
+    const string BOLD = "\033[1m";
+    const string DIM = "\033[2m";
+    const string UNDERLINE = "\033[4m";
     UserProfile obj;
     bool use = true;
     bool checkLoggedInState = false;
@@ -180,7 +206,7 @@ int main() {
         string passwordLoggingIn;
         if (definedUser) {
             if (!checkLoggedInState) {
-                cout << "Welcome to UserDb. Please log in using your account." << endl
+                cout << "Welcome to UserDb. Please log in using your account." <<  endl
                     << "Username: ";
                 cin >> userLoggingIn;
                 cout << "Password: ";
@@ -191,20 +217,24 @@ int main() {
                     if (correctUserLogin) {
                         cout << "Welcome, User" << endl;
                     }
-                    cout << "Sorry, this user doesn't exist. Please check your password and username again." << endl;
+                    cout << RED << "Sorry, this user doesn't exist. Please check your password and username again." <<  RESET << endl;
                 }
             }
             else if (correctLoginAdmin || checkLoggedInState) {
+                clearScreen();
                 cout << "Welcome back. Which action would you like to perform?" << endl
-                    << "Add a user" << endl
-                    << "Remove a user" << endl
-                    << "View all users" << endl
-                    << "Exit program" << endl;
+                    << "1) Add" << endl
+                    << "2) Remove" << endl
+                    << "3) View users" << endl
+                    << "4) Exit" << endl;
                 string choice;
+                printPrompt();
                 cin >> choice;
                 if (choice == "View") {
                     obj.returnAll();
-                    
+                    this_thread::sleep_for(chrono::seconds(3));
+                    obj.saveToLog(choice, userLoggingIn);
+                    clearScreen();
                 }
                 else if (choice == "Exit") {
                     use = false;
@@ -225,13 +255,16 @@ int main() {
                     cin >> idCreating;
                     obj.addUser(userCreating, roleCreating, idCreating, passwordCreating);
                     obj.saveData();
-                    obj.saveToLog(choice, userLoggingIn);
                 }
                 else if (choice == "Remove") {
                     cout << "Please enter the name of the user you want to remove." << endl;
                     string toRemove;
                     cin >> toRemove;
                     obj.removeUser(toRemove);
+                }
+                else {
+                    cout << RED << "No valid choice detected" << RESET << endl;
+                    this_thread::sleep_for(chrono::seconds(2));
                 }
             }
         }
