@@ -1,4 +1,4 @@
-﻿#include <iostream>
+#include <iostream>
 #include <string>
 #include <vector>
 #include <fstream>
@@ -8,16 +8,22 @@ using namespace std;
 
 class UserProfile {
 public:
-    int i = 0;
-    void addUser(string name, string role, int id, string password) {
+    void addUser(string name, string role, string password) {
         Usernames.push_back(name);
         Userroles.push_back(role);
-        UserIds.push_back(id);
+        if (UserIds.size() == 0) {
+            UserIds.push_back(1);
+        }
+        else {
+            int i = 0;
+            for (; i < UserIds.size(); i++) {
+                UserIds.push_back(UserIds[i] + 1);
+            }
+        }
         Userpasswords.push_back(password);
     }
     void returnAll() {
-        int i = 0;
-        for (; i < Usernames.size(); i++)
+        for (int i = 0; i < Usernames.size(); i++)
             cout << Usernames[i] << endl << UserIds[i] << endl << Userroles[i] << endl;
     }
     bool checkIfUsers() {
@@ -33,8 +39,7 @@ public:
     bool correctLoginAdmin = false;
     bool correctUserLogin = false;
     bool checkAdminAuthentication(string attemptedUser, string attemptedPassword) {
-        int i = 0;
-        for (; i < Usernames.size(); i++) {
+        for (int i = 0; i < Usernames.size(); i++) {
             if (attemptedUser == Usernames[i] && attemptedPassword == Userpasswords[i] && Userroles[i] == "Admin") {
                 correctLoginAdmin = true;
             }
@@ -42,25 +47,31 @@ public:
         return correctLoginAdmin;
     }
     bool checkUserAuthentication(string attemptedUser, string attemptedPassword) {
-        int i = 0;
-        for (; i < Usernames.size(); i++) {
+        for (int i = 0; i < Usernames.size(); i++) {
             if (attemptedUser == Usernames[i] && attemptedPassword == Userpasswords[i] && Userroles[i] == "User") {
                 correctUserLogin = true;
             }
         }
         return correctUserLogin;
     }
-    bool checkIfLoggedIn() {
-        bool alreadySignedIn;
-        alreadySignedIn = false;
+    bool checkIfAdminLoggedIn() {
+        bool AdminAlreadySignedIn;
+        AdminAlreadySignedIn = false;
         if (correctLoginAdmin) {
-            alreadySignedIn = true;
+            AdminAlreadySignedIn = true;
         }
-        return alreadySignedIn;
+        return AdminAlreadySignedIn;
+    }
+    bool checkIfUserLoggedIn() {
+        bool UserAlreadySignedIn;
+        UserAlreadySignedIn = false;
+        if (correctLoginAdmin) {
+            UserAlreadySignedIn = true;
+        }
+        return UserAlreadySignedIn;
     }
     void removeUser(string removing) {
-        int i = 0;
-        for (; i < Usernames.size(); i++) {
+        for (int i = 0; i < Usernames.size(); i++) {
             if (removing == Usernames[i]) {
                 Usernames.erase(Usernames.begin() + i);
                 Userpasswords.erase(Userpasswords.begin() + i);
@@ -202,97 +213,40 @@ int main() {
     )" << endl;
     UserProfile obj;
     bool use = true;
-    bool checkLoggedInState = false;
+    bool checkAdminLoggedInState = false;
     while (use) {
         obj.loadData();
         bool correctLoginAdmin = false;
         bool correctUserLogin = false;
-        bool checkLoggedInState = obj.checkIfLoggedIn();
+        bool checkAdminLoggedInState = obj.checkIfAdminLoggedIn();
+        bool checkUserLoggedInState = obj.checkIfUserLoggedIn();
         bool definedUser = obj.checkIfUsers();
         string userLoggingIn;
         string passwordLoggingIn;
-        if (definedUser) {
-            if (!checkLoggedInState) {
-                cout << "Welcome to UserDb. Please log in using your account." <<  endl
-                    << "Username: ";
-                cin >> userLoggingIn;
-                cout << "Password: ";
-                cin >> passwordLoggingIn;
-                correctLoginAdmin = obj.checkAdminAuthentication(userLoggingIn, passwordLoggingIn);
-                if (!correctLoginAdmin && definedUser) {
-                    correctUserLogin = obj.checkUserAuthentication(userLoggingIn, passwordLoggingIn);
-                    if (correctUserLogin) {
-                        cout << "Welcome, User" << endl;
-                    }
-                    cout << RED << "Sorry, this user doesn't exist. Please check your password and username again." <<  RESET << endl;
-                }
-            }
-            else if (correctLoginAdmin || checkLoggedInState) {
-                clearScreen();
-                string userPerforming = userLoggingIn;
-                cout << "Welcome back. Which action would you like to perform?" << endl
-                    << "1) Add user" << endl
-                    << "2) Remove user" << endl
-                    << "3) View users" << endl
-                    << "4) Exit" << endl;
-                string choice;
-                printPrompt();
-                cin >> choice;
-                if (choice == "View") {
-                    clearScreen;
-                    obj.returnAll();
-                    obj.saveToLog(choice, userPerforming);
-                    this_thread::sleep_for(chrono::seconds(3));
-                    clearScreen();
-                }
-                else if (choice == "Exit") {
-                    use = false;
-                }
-                else if (choice == "Add") {
-                    cout << "Please enter the details of the user you want to add." << endl
-                        << "Username: ";
-                    string userCreating;
-                    cin >> userCreating;
-                    cout << "Password: ";
-                    string passwordCreating;
-                    cin >> passwordCreating;
-                    cout << "Role: ";
-                    string roleCreating;
-                    cin >> roleCreating;
-                    cout << "Id: ";
-                    int idCreating;
-                    cin >> idCreating;
-                    obj.addUser(userCreating, roleCreating, idCreating, passwordCreating);
-                    obj.saveData();
-                }
-                else if (choice == "Remove") {
-                    cout << "Please enter the name of the user you want to remove." << endl;
-                    string toRemove;
-                    cin >> toRemove;
-                    obj.removeUser(toRemove);
-                }
-                else {
-                    cout << RED << "No valid choice detected" << RESET << endl;
-                    this_thread::sleep_for(chrono::seconds(3)); this_thread::sleep_for(chrono::seconds(3));
-                }
-            }
-        }
         if (!definedUser) {
-            cout << "Welcome to UserDb. Please create an Admin account to access this DB" << endl
-                << "Username: ";
-            string userSigningIn;
-            cin >> userSigningIn;
-            cout << "Password: ";
-            string passwordSigningIn;
-            cin >> passwordSigningIn;
-            cout << "Role: ";
-            string roleSigningIn;
-            cin >> roleSigningIn;
-            cout << "Id: ";
-            int idSigningIn;
-            cin >> idSigningIn;
-            obj.addUser(userSigningIn, roleSigningIn, idSigningIn, passwordSigningIn);
+            string firstUserName;
+            int firstUserId = 1;
+            string firstUserRole = "Admin";
+            string firstUserPassword;
+            cout << "Welcome to PiLocks. To start, please create a PiLocks account" << endl;
+            cout << "How would you like to be called?" << endl;
+            printPrompt();
+            cin >> firstUserName;
+            cout << "Wich password would you like to use?" << endl;
+            printPrompt();
+            cin >> firstUserPassword;
+            obj.addUser(firstUserName, firstUserRole, firstUserPassword);
             obj.saveData();
+        }
+        else if (definedUser && !checkAdminLoggedInState && !checkUserLoggedInState) {
+            clearScreen();
+            cout << "Please login using your PiLocks account." << endl;
+            cout << "What is your username?" << endl;
+            printPrompt();
+            cin >> userLoggingIn;
+            cout << "What is your password?" << endl;
+            printPrompt();
+            cin >> passwordLoggingIn;
         }
     }
 }
