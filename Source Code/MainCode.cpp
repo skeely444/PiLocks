@@ -71,16 +71,20 @@ public:
         }
     }
     void saveToLog(string action, string user) {
-        cout << action << user << endl;
+        ActionsPerformed.push_back(action);
+        UserPerformed.push_back(user);
+
         ofstream file("Logs.json");
 
         file << "{\n";
         file << "  \"Logged actions\": [\n";
 
-        file << "{\n";
-        file << "    \"User\": \"" <<  user << "\",\n";
-        file << "    \"Action\": \"" << action << "\"\n";
-        file << "}\n";
+        for (int i = 0; i < ActionsPerformed.size(); i++) {
+            file << "{\n";
+            file << "    \"User\": \"" << UserPerformed[i] << "\",\n";
+            file << "    \"Action\": \"" << ActionsPerformed[i] << "\"\n";
+            file << "}\n";
+        }
 
         file << "  ]\n";
         file << "}\n";
@@ -181,18 +185,21 @@ void printPrompt() {
 void clearScreen() {
     cout << "\033[2J\033[H";
 }
+const string RESET = "\033[0m";
+const string RED = "\033[31m";
+const string BOLD = "\033[1m";
+const string DIM = "\033[2m";
+const string UNDERLINE = "\033[4m";
 
 int main() {
     cout << R"(
-      _____  _____         _____  _______ _     _ _______
-     |_____]   |   |      |     | |       |____/  |______
-     |       __|__ |_____ |_____| |_____  |    \_ ______|                                                                                                                                                                   
+                                             ___       _                    _           
+                                            (  _`\  _ ( )                  ( )          
+                                            | |_) )(_)| |       _      ___ | |/')   ___ 
+                                            | ,__/'| || |  _  /'_`\  /'___)| , <  /',__)
+                                            | |    | || |_( )( (_) )( (___ | |\`\ \__, \
+                                            (_)    (_)(____/'`\___/'`\____)(_) (_)(____/                                                                                                                                                                                                                                                                        
     )" << endl;
-    const string RESET = "\033[0m";
-    const string RED = "\033[31m";
-    const string BOLD = "\033[1m";
-    const string DIM = "\033[2m";
-    const string UNDERLINE = "\033[4m";
     UserProfile obj;
     bool use = true;
     bool checkLoggedInState = false;
@@ -222,18 +229,20 @@ int main() {
             }
             else if (correctLoginAdmin || checkLoggedInState) {
                 clearScreen();
+                string userPerforming = userLoggingIn;
                 cout << "Welcome back. Which action would you like to perform?" << endl
-                    << "1) Add" << endl
-                    << "2) Remove" << endl
+                    << "1) Add user" << endl
+                    << "2) Remove user" << endl
                     << "3) View users" << endl
                     << "4) Exit" << endl;
                 string choice;
                 printPrompt();
                 cin >> choice;
                 if (choice == "View") {
+                    clearScreen;
                     obj.returnAll();
+                    obj.saveToLog(choice, userPerforming);
                     this_thread::sleep_for(chrono::seconds(3));
-                    obj.saveToLog(choice, userLoggingIn);
                     clearScreen();
                 }
                 else if (choice == "Exit") {
@@ -264,7 +273,7 @@ int main() {
                 }
                 else {
                     cout << RED << "No valid choice detected" << RESET << endl;
-                    this_thread::sleep_for(chrono::seconds(2));
+                    this_thread::sleep_for(chrono::seconds(3)); this_thread::sleep_for(chrono::seconds(3));
                 }
             }
         }
