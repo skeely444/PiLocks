@@ -247,6 +247,12 @@ int main() {
             cout << "What is your password?" << endl;
             printPrompt();
             cin >> passwordLoggingIn;
+            correctLoginAdmin = obj.checkAdminAuthentication(userLoggingIn, passwordLoggingIn);
+            correctUserLogin = obj.checkUserAuthentication(userLoggingIn, passwordLoggingIn);
+        }
+        else if (correctLoginAdmin) {
+            clearScreen();
+
         }
     }
 }
