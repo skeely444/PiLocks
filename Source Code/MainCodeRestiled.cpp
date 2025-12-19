@@ -4,7 +4,22 @@
 #include <fstream>
 #include <thread>
 #include <chrono>
+#include <ctime>
 using namespace std;
+
+string getTimestamp()
+{
+    auto now = chrono::system_clock::now();
+    std::time_t now_c = chrono::system_clock::to_time_t(now);
+
+    tm localTime{};
+    localtime_s(&localTime, &now_c); // Windows-safe
+
+    char buffer[20];
+    strftime(buffer, sizeof(buffer), "%H:%M:%S", &localTime);
+
+    return buffer;
+}
 
 class UserProfile {
 public:
@@ -84,21 +99,6 @@ public:
     void saveToLog(string action, string user) {
         ActionsPerformed.push_back(action);
         UserPerformed.push_back(user);
-
-        ofstream file("Logs.json");
-
-        file << "{\n";
-        file << "  \"Logged actions\": [\n";
-
-        for (int i = 0; i < ActionsPerformed.size(); i++) {
-            file << "{\n";
-            file << "    \"User\": \"" << UserPerformed[i] << "\",\n";
-            file << "    \"Action\": \"" << ActionsPerformed[i] << "\"\n";
-            file << "}\n";
-        }
-
-        file << "  ]\n";
-        file << "}\n";
     }
     void saveData() {
         ofstream file("userdataa.json");
@@ -214,10 +214,10 @@ int main() {
     UserProfile obj;
     bool use = true;
     bool checkAdminLoggedInState = false;
+    bool correctLoginAdmin = false;
+    bool correctUserLogin = false;
     while (use) {
         obj.loadData();
-        bool correctLoginAdmin = false;
-        bool correctUserLogin = false;
         bool checkAdminLoggedInState = obj.checkIfAdminLoggedIn();
         bool checkUserLoggedInState = obj.checkIfUserLoggedIn();
         bool definedUser = obj.checkIfUsers();
@@ -238,7 +238,22 @@ int main() {
             obj.addUser(firstUserName, firstUserRole, firstUserPassword);
             obj.saveData();
         }
-        else if (definedUser && !checkAdminLoggedInState && !checkUserLoggedInState) {
+        else if (correctLoginAdmin) {
+            clearScreen();
+            cout << R"(
+                     ------------------------------------------------------------------------------------
+                         _       _           _         ____            _     _                         _ 
+                        / \   __| |_ __ ___ (_)_ __   |  _ \  __ _ ___| |__ | |__   ___   __ _ _ __ __| |
+                       / _ \ / _` | '_ ` _ \| | '_ \  | | | |/ _` / __| '_ \| '_ \ / _ \ / _` | '__/ _` |
+                      / ___ \ (_| | | | | | | | | | | | |_| | (_| \__ \ | | | |_) | (_) | (_| | | | (_| |
+                     /_/   \_\__,_|_| |_| |_|_|_| |_| |____/ \__,_|___/_| |_|_.__/ \___/ \__,_|_|  \__,_|
+                     ------------------------------------------------------------------------------------
+            )" << endl;
+            cout << "Logs: " << endl;
+            string buffer = getTimestamp();
+            cout << buffer;
+        }
+        else if (definedUser) {
             clearScreen();
             cout << "Please login using your PiLocks account." << endl;
             cout << "What is your username?" << endl;
@@ -250,9 +265,8 @@ int main() {
             correctLoginAdmin = obj.checkAdminAuthentication(userLoggingIn, passwordLoggingIn);
             correctUserLogin = obj.checkUserAuthentication(userLoggingIn, passwordLoggingIn);
         }
-        else if (correctLoginAdmin) {
-            clearScreen();
-
+        else {
+            cout << RED << "Something went wrong" << RESET << endl;
         }
     }
 }
