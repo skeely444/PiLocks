@@ -7,6 +7,18 @@
 #include <ctime>
 using namespace std;
 
+void printPrompt() {
+    cout << "\033[36m> \033[0m";
+}
+void clearScreen() {
+    cout << "\033[2J\033[H";
+}
+const string RESET = "\033[0m";
+const string RED = "\033[31m";
+const string BOLD = "\033[1m";
+const string DIM = "\033[2m";
+const string UNDERLINE = "\033[4m";
+
 string getTimestamp()
 {
     auto now = chrono::system_clock::now();
@@ -100,8 +112,14 @@ public:
         ActionsPerformed.push_back(action);
         UserPerformed.push_back(user);
     }
+    void getActivityLogs() {
+        string buffer = getTimestamp();
+        for (int i = 0; i < ActionsPerformed.size(); i++) {
+            cout << UNDERLINE << buffer << ActionsPerformed[i] << UserPerformed[i] << RESET << endl;
+        }
+    }
     void saveData() {
-        ofstream file("userdataa.json");
+        ofstream file("userdata.json");
 
         file << "{\n";
         file << "  \"users\": [\n";
@@ -127,7 +145,7 @@ public:
 
     // Load all users from JSON back into vectors
     void loadData() {
-        ifstream file("userdataa.json");
+        ifstream file("userdata.json");
         if (!file.is_open()) {
             // No existing file? Nothing to load (first time running).
             return;
@@ -190,17 +208,6 @@ private:
     vector <string> ActionsPerformed;
     vector <string> UserPerformed;
 };
-void printPrompt() {
-    cout << "\033[36m> \033[0m";
-}
-void clearScreen() {
-    cout << "\033[2J\033[H";
-}
-const string RESET = "\033[0m";
-const string RED = "\033[31m";
-const string BOLD = "\033[1m";
-const string DIM = "\033[2m";
-const string UNDERLINE = "\033[4m";
 
 int main() {
     cout << R"(
@@ -251,7 +258,33 @@ int main() {
             )" << endl;
             cout << "Logs: " << endl;
             string buffer = getTimestamp();
-            cout << buffer;
+            obj.getActivityLogs();
+            cout << endl << "Available actions: " << endl;
+            cout << " 1) Add User" << endl
+                << " 2) Remove User" << endl
+                << " 3) View Users" << endl
+                << " 4) Exit Program" << endl;
+            string choice;
+            printPrompt();
+            cin >> choice;
+            if (choice == "Add") {
+                string userNameAdding;
+                string userRoleAdding;
+                string userPasswordAdding;
+                clearScreen();
+                cout << "Please enter the details of the new user below" << endl
+                    << " Username: " << endl;
+                printPrompt();
+                cin >> userNameAdding;
+                cout << " Role: " << endl;
+                printPrompt();
+                cin >> userRoleAdding;
+                cout << " Password: " << endl;
+                printPrompt();
+                cin >> userPasswordAdding;
+                obj.addUser(userNameAdding, userRoleAdding, userPasswordAdding);
+                obj.saveData();
+            }
         }
         else if (definedUser) {
             clearScreen();
