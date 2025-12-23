@@ -35,18 +35,10 @@ string getTimestamp()
 
 class UserProfile {
 public:
-    void addUser(string name, string role, string password) {
+    void addUser(string name, string role, string password, int id) {
         Usernames.push_back(name);
         Userroles.push_back(role);
-        if (UserIds.size() == 0) {
-            UserIds.push_back(1);
-        }
-        else {
-            int i = 0;
-            for (; i < UserIds.size(); i++) {
-                UserIds.push_back(UserIds[i] + 1);
-            }
-        }
+        UserIds.push_back(id);
         Userpasswords.push_back(password);
     }
     void returnAll() {
@@ -221,13 +213,15 @@ int main() {
     UserProfile obj;
     bool use = true;
     bool checkAdminLoggedInState = false;
+    bool checkUserLoggedInState = false;
     bool correctLoginAdmin = false;
     bool correctUserLogin = false;
+    bool definedUser;
     while (use) {
         obj.loadData();
-        bool checkAdminLoggedInState = obj.checkIfAdminLoggedIn();
-        bool checkUserLoggedInState = obj.checkIfUserLoggedIn();
-        bool definedUser = obj.checkIfUsers();
+        checkAdminLoggedInState = obj.checkIfAdminLoggedIn();
+        checkUserLoggedInState = obj.checkIfUserLoggedIn();
+        definedUser = obj.checkIfUsers();
         string userLoggingIn;
         string passwordLoggingIn;
         if (!definedUser) {
@@ -242,8 +236,9 @@ int main() {
             cout << "Wich password would you like to use?" << endl;
             printPrompt();
             cin >> firstUserPassword;
-            obj.addUser(firstUserName, firstUserRole, firstUserPassword);
+            obj.addUser(firstUserName, firstUserRole, firstUserPassword, firstUserId);
             obj.saveData();
+            clearScreen();
         }
         else if (correctLoginAdmin) {
             clearScreen();
@@ -271,6 +266,7 @@ int main() {
                 string userNameAdding;
                 string userRoleAdding;
                 string userPasswordAdding;
+                int userIdAdding;
                 clearScreen();
                 cout << "Please enter the details of the new user below" << endl
                     << " Username: " << endl;
@@ -282,12 +278,35 @@ int main() {
                 cout << " Password: " << endl;
                 printPrompt();
                 cin >> userPasswordAdding;
-                obj.addUser(userNameAdding, userRoleAdding, userPasswordAdding);
+                cout << " Id: " << endl;
+                printPrompt();
+                cin >> userIdAdding;
+                obj.addUser(userNameAdding, userRoleAdding, userPasswordAdding, userIdAdding);
                 obj.saveData();
+                obj.saveToLog(choice, userLoggingIn);
+            }
+            else if (choice == "View") {
+                clearScreen();
+                obj.returnAll();
+                this_thread::sleep_for(chrono::seconds(10));
+            }
+            else if (choice == "Remove") {
+                clearScreen();
+                cout << "Wich user would you like to remove?" << endl;
+                string userToRemove;
+                printPrompt();
+                cin >> userToRemove;
+                obj.removeUser(userToRemove);
+                obj.saveData();
+            }
+            else if (choice == "Exit") {
+                use = false;
+            }
+            else {
+                cout << RED << "No valid choice detected" << RESET << endl;
             }
         }
         else if (definedUser) {
-            clearScreen();
             cout << "Please login using your PiLocks account." << endl;
             cout << "What is your username?" << endl;
             printPrompt();
