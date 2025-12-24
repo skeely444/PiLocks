@@ -113,8 +113,34 @@ public:
         ActionsPerformed.push_back(action);
         UserPerformed.push_back(loggedInUser);  // Use member variable
         ActionTimestamps.push_back(getTimestamp());
+
+        ofstream file("userLogs.json");
+
+        file << "{\n";
+        file << " \"Actions\": [\n";
+
+        for (int i = 0; i < ActionsPerformed.size(); i++) {
+            file << "    {\n";
+            file << "      \"user\": \"" << UserPerformed[i] << "\",\n";
+            file << "      \"action\": \"" << ActionsPerformed[i] << "\",\n";
+            file << "      \"time\": \"" << ActionTimestamps[i] << "\"\n";
+
+            if (i == Usernames.size() - 1)
+                file << "    }\n";
+            else
+                file << "    },\n";
+        }
+        file << "  ]\n";
+        file << "}\n";
+
+        file.close();
     }
     void getActivityLogs() {
+        ifstream file("userLogs.json");
+        if (!file.is_open()) {
+            cout << "Placeholder";
+        }
+
         for (int i = 0; i < ActionsPerformed.size(); i++) {
             string timestamp = ActionTimestamps[i];  // Use stored timestamp
             if (ActionsPerformed[i] == "Add") {
@@ -252,7 +278,7 @@ int main() {
             cout << "How would you like to be called?" << endl;
             printPrompt();
             cin >> firstUserName;
-            cout << "Wich password would you like to use?" << endl;
+            cout << "Which password would you like to use?" << endl;
             printPrompt();
             cin >> firstUserPassword;
             obj.addUser(firstUserName, firstUserRole, firstUserPassword, firstUserId);
@@ -312,7 +338,7 @@ int main() {
             }
             else if (choice == "Remove") {
                 clearScreen();
-                cout << "Wich user would you like to remove?" << endl;
+                cout << "Which user would you like to remove?" << endl;
                 string userToRemove;
                 printPrompt();
                 cin >> userToRemove;
