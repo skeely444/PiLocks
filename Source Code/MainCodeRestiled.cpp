@@ -15,6 +15,8 @@ void clearScreen() {
 }
 const string RESET = "\033[0m";
 const string RED = "\033[31m";
+const string GREEN = "\033[32m";
+const string BLUE = "\033[34m";
 const string BOLD = "\033[1m";
 const string DIM = "\033[2m";
 const string UNDERLINE = "\033[4m";
@@ -35,6 +37,12 @@ string getTimestamp()
 
 class UserProfile {
 public:
+    string loggedInUser = "";  // Add this member variable
+    
+    void setLoggedInUser(string user) {
+        loggedInUser = user;
+    }
+    
     void addUser(string name, string role, string password, int id) {
         Usernames.push_back(name);
         Userroles.push_back(role);
@@ -96,18 +104,28 @@ public:
                 Userpasswords.erase(Userpasswords.begin() + i);
                 Userroles.erase(Userroles.begin() + i);
                 UserIds.erase(UserIds.begin() + i);
-                cout << "Removed user: " << Usernames[i];
+                cout << "Removed user: " << removing << endl;  // Use the parameter, not the array
+                break;  // Exit after removing the first match
             }
         }
     }
-    void saveToLog(string action, string user) {
+    void saveToLog(string action) {  // Remove user parameter
         ActionsPerformed.push_back(action);
-        UserPerformed.push_back(user);
+        UserPerformed.push_back(loggedInUser);  // Use member variable
+        ActionTimestamps.push_back(getTimestamp());
     }
     void getActivityLogs() {
-        string buffer = getTimestamp();
         for (int i = 0; i < ActionsPerformed.size(); i++) {
-            cout << UNDERLINE << buffer << ActionsPerformed[i] << UserPerformed[i] << RESET << endl;
+            string timestamp = ActionTimestamps[i];  // Use stored timestamp
+            if (ActionsPerformed[i] == "Add") {
+                cout << timestamp << " " << UserPerformed[i] << GREEN << " added" << RESET << " a new user" << endl;
+            }
+            else if (ActionsPerformed[i] == "View") {
+                cout << timestamp << " " << UserPerformed[i] << BLUE << " viewed" << RESET << " all the Users" << endl;
+            }
+            else if (ActionsPerformed[i] == "Remove") {
+                cout << timestamp << " " << UserPerformed[i] << RED << " removed" << RESET << " a user" << endl;
+            }
         }
     }
     void saveData() {
@@ -199,6 +217,7 @@ private:
     vector <string> Userpasswords;
     vector <string> ActionsPerformed;
     vector <string> UserPerformed;
+    vector <string> ActionTimestamps;
 };
 
 int main() {
@@ -240,7 +259,7 @@ int main() {
             obj.saveData();
             clearScreen();
         }
-        else if (correctLoginAdmin) {
+        else if (correctLoginAdmin || checkAdminLoggedInState) {
             clearScreen();
             cout << R"(
                      ------------------------------------------------------------------------------------
@@ -255,10 +274,10 @@ int main() {
             string buffer = getTimestamp();
             obj.getActivityLogs();
             cout << endl << "Available actions: " << endl;
-            cout << " 1) Add User" << endl
-                << " 2) Remove User" << endl
-                << " 3) View Users" << endl
-                << " 4) Exit Program" << endl;
+            cout << " 1) " << BOLD << "Add " << RESET << "User" << endl
+                << " 2) " << BOLD << "Remove " << RESET << "User" << endl
+                << " 3) " << BOLD << "View " << RESET << "Users" << endl
+                << " 4) " << BOLD << "Exit " << RESET << "Program" << endl;
             string choice;
             printPrompt();
             cin >> choice;
@@ -283,11 +302,12 @@ int main() {
                 cin >> userIdAdding;
                 obj.addUser(userNameAdding, userRoleAdding, userPasswordAdding, userIdAdding);
                 obj.saveData();
-                obj.saveToLog(choice, userLoggingIn);
+                obj.saveToLog(choice);
             }
             else if (choice == "View") {
                 clearScreen();
                 obj.returnAll();
+                obj.saveToLog(choice);
                 this_thread::sleep_for(chrono::seconds(10));
             }
             else if (choice == "Remove") {
@@ -298,6 +318,7 @@ int main() {
                 cin >> userToRemove;
                 obj.removeUser(userToRemove);
                 obj.saveData();
+                obj.saveToLog(choice);
             }
             else if (choice == "Exit") {
                 use = false;
@@ -305,6 +326,18 @@ int main() {
             else {
                 cout << RED << "No valid choice detected" << RESET << endl;
             }
+        }
+        else if (correctUserLogin || checkUserLoggedInState) {
+            cout << R"(
+                     --------------------------------------------------------------------- 
+                      _    _                 _____            _                         _ 
+                     | |  | |               |  __ \          | |                       | |
+                     | |  | |___  ___ _ __  | |  | | __ _ ___| |__   ___   __ _ _ __ __| |
+                     | |  | / __|/ _ \ '__| | |  | |/ _` / __| '_ \ / _ \ / _` | '__/ _` |
+                     | |__| \__ \  __/ |    | |__| | (_| \__ \ |_) | (_) | (_| | | | (_| |
+                      \____/|___/\___|_|    |_____/ \__,_|___/_.__/ \___/ \__,_|_|  \__,_|
+                     ---------------------------------------------------------------------
+            )";
         }
         else if (definedUser) {
             cout << "Please login using your PiLocks account." << endl;
@@ -315,6 +348,9 @@ int main() {
             printPrompt();
             cin >> passwordLoggingIn;
             correctLoginAdmin = obj.checkAdminAuthentication(userLoggingIn, passwordLoggingIn);
+            if (correctLoginAdmin) {
+                obj.setLoggedInUser(userLoggingIn);  // Store the username
+            }
             correctUserLogin = obj.checkUserAuthentication(userLoggingIn, passwordLoggingIn);
         }
         else {
