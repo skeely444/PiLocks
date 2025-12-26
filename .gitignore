@@ -82,3 +82,6 @@ Source Code/userdataa.json
 Desktop edition/userdata.json
 Desktop edition/x64/Debug/Source Code.pdb
 Desktop edition/userLogs.json
+Desktop edition/vcpkg.json
+Desktop edition/bcrypt.h
+Desktop edition/bcrypt.cpp

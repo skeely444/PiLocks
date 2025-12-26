@@ -5,7 +5,10 @@
 #include <thread>
 #include <chrono>
 #include <ctime>
+#include "bcrypt.h"
 using namespace std;
+
+
 
 void printPrompt() {
     cout << "\033[36m> \033[0m";
@@ -49,13 +52,23 @@ public:
         UserIds.push_back(id);
         Userpasswords.push_back(password);
     }
-    string hashPassword(string password) {
+    string hashUsername(string username) {
         vector <int> individualHash;
-        for (int i = 0; i < password.length(); i++) {
-            int AsciiChar = password[i];
-            int hashResult = (AsciiChar * AsciiChar) - (AsciiChar + AsciiChar) * (AsciiChar % 2);
+        for (int i = 0; i < username.length(); i++) {
+            int AsciiChar = username[i];
+            int hashResult = (AsciiChar * AsciiChar) - (AsciiChar + AsciiChar) * (AsciiChar % 2) + AsciiChar;
             individualHash.push_back(hashResult);
         }
+        string result = "";
+        for (int i = 0; i < individualHash.size(); i++) {
+            result += to_string(individualHash[i]);
+        }
+        return result;
+    }
+    string hashPassword(string password) {
+        string hashedPassword = bcrypt::generateHash(password);
+        cout << hashedPassword << endl;
+        return hashedPassword;
     }
     void returnAll() {
         for (int i = 0; i < Usernames.size(); i++)
@@ -318,7 +331,8 @@ int main() {
             cout << "Which password would you like to use?" << endl;
             printPrompt();
             cin >> firstUserPassword;
-            obj.addUser(firstUserName, firstUserRole, firstUserPassword, firstUserId);
+            string hashedFirstUserName = obj.hashUsername(firstUserName);
+            obj.addUser(hashedFirstUserName, firstUserRole, firstUserPassword, firstUserId);
             obj.saveData();
             clearScreen();
         }
@@ -362,7 +376,8 @@ int main() {
                 cout << " Id: " << endl;
                 printPrompt();
                 cin >> userIdAdding;
-                obj.addUser(userNameAdding, userRoleAdding, userPasswordAdding, userIdAdding);
+                string hashedUser = obj.hashUsername(userNameAdding);
+                obj.addUser(hashedUser, userRoleAdding, userPasswordAdding, userIdAdding);
                 obj.saveData();
                 obj.saveToLog(choice);
             }
@@ -378,7 +393,8 @@ int main() {
                 string userToRemove;
                 printPrompt();
                 cin >> userToRemove;
-                obj.removeUser(userToRemove);
+                string hashedUserToRemove;
+                obj.removeUser(hashedUserToRemove);
                 obj.saveData();
                 obj.saveToLog(choice);
             }
@@ -387,6 +403,7 @@ int main() {
             }
             else {
                 cout << RED << "No valid choice detected" << RESET << endl;
+                this_thread::sleep_for(chrono::seconds(5));
             }
         }
         else if (correctUserLogin || checkUserLoggedInState) {
@@ -402,6 +419,7 @@ int main() {
             )";
         }
         else if (definedUser) {
+            obj.hashPassword("testing");
             cout << "Please login using your PiLocks account." << endl;
             cout << "What is your username?" << endl;
             printPrompt();
@@ -409,14 +427,16 @@ int main() {
             cout << "What is your password?" << endl;
             printPrompt();
             cin >> passwordLoggingIn;
-            correctLoginAdmin = obj.checkAdminAuthentication(userLoggingIn, passwordLoggingIn);
+            string hashedUserLoggingIn = obj.hashUsername(userLoggingIn);
+            correctLoginAdmin = obj.checkAdminAuthentication(hashedUserLoggingIn, passwordLoggingIn);
             if (correctLoginAdmin) {
                 obj.setLoggedInUser(userLoggingIn);  // Store the username
             }
-            correctUserLogin = obj.checkUserAuthentication(userLoggingIn, passwordLoggingIn);
+            correctUserLogin = obj.checkUserAuthentication(hashedUserLoggingIn, passwordLoggingIn);
         }
         else {
             cout << RED << "Something went wrong" << RESET << endl;
+            this_thread::sleep_for(chrono::seconds(5));
         }
     }
 }
