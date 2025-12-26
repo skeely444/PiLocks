@@ -49,6 +49,14 @@ public:
         UserIds.push_back(id);
         Userpasswords.push_back(password);
     }
+    string hashPassword(string password) {
+        vector <int> individualHash;
+        for (int i = 0; i < password.length(); i++) {
+            int AsciiChar = password[i];
+            int hashResult = (AsciiChar * AsciiChar) - (AsciiChar + AsciiChar) * (AsciiChar % 2);
+            individualHash.push_back(hashResult);
+        }
+    }
     void returnAll() {
         for (int i = 0; i < Usernames.size(); i++)
             cout << Usernames[i] << endl << UserIds[i] << endl << Userroles[i] << endl;
@@ -138,7 +146,36 @@ public:
     void getActivityLogs() {
         ifstream file("userLogs.json");
         if (!file.is_open()) {
-            cout << "Placeholder";
+            return;
+        }
+
+        UserPerformed.clear();
+        ActionsPerformed.clear();
+        ActionTimestamps.clear();
+
+        string word;
+        while (file >> word) {
+            if (word == "\"user\":") {
+                string name;
+                file >> name;
+                name.erase(0, 1);
+                name.erase(name.size() - 2, 2);
+                UserPerformed.push_back(name);
+            }
+            else if (word == "\"action\":") {
+                string action;
+                file >> action;
+                action.erase(0, 1);
+                action.erase(action.size() - 2, 2);
+                ActionsPerformed.push_back(action);
+            }
+            else if (word == "\"time\":") {
+                string time;
+                file >> time;
+                time.erase(0, 1);
+                time.erase(time.size() - 2, 2);
+                ActionTimestamps.push_back(time);
+            }
         }
 
         for (int i = 0; i < ActionsPerformed.size(); i++) {
@@ -297,7 +334,6 @@ int main() {
                      ------------------------------------------------------------------------------------
             )" << endl;
             cout << "Logs: " << endl;
-            string buffer = getTimestamp();
             obj.getActivityLogs();
             cout << endl << "Available actions: " << endl;
             cout << " 1) " << BOLD << "Add " << RESET << "User" << endl
