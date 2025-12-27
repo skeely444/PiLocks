@@ -88,7 +88,7 @@ public:
     bool correctUserLogin = false;
     bool checkAdminAuthentication(string attemptedUser, string attemptedPassword) {
         for (int i = 0; i < Usernames.size(); i++) {
-            if (attemptedUser == Usernames[i] && attemptedPassword == Userpasswords[i] && Userroles[i] == "Admin") {
+            if (attemptedUser == Usernames[i] && bcrypt::validatePassword(attemptedPassword, Userpasswords[i]) && Userroles[i] == "Admin") {
                 correctLoginAdmin = true;
             }
         }
@@ -96,15 +96,14 @@ public:
     }
     bool checkUserAuthentication(string attemptedUser, string attemptedPassword) {
         for (int i = 0; i < Usernames.size(); i++) {
-            if (attemptedUser == Usernames[i] && attemptedPassword == Userpasswords[i] && Userroles[i] == "User") {
+            if (attemptedUser == Usernames[i] && bcrypt::validatePassword(attemptedPassword, Userpasswords[i]) && Userroles[i] == "User") {
                 correctUserLogin = true;
             }
         }
         return correctUserLogin;
     }
     bool checkIfAdminLoggedIn() {
-        bool AdminAlreadySignedIn;
-        AdminAlreadySignedIn = false;
+        bool AdminAlreadySignedIn = false;
         if (correctLoginAdmin) {
             AdminAlreadySignedIn = true;
         }
@@ -332,7 +331,8 @@ int main() {
             printPrompt();
             cin >> firstUserPassword;
             string hashedFirstUserName = obj.hashUsername(firstUserName);
-            obj.addUser(hashedFirstUserName, firstUserRole, firstUserPassword, firstUserId);
+            string hashedFirstPassword = obj.hashPassword(firstUserPassword);
+            obj.addUser(hashedFirstUserName, firstUserRole, hashedFirstPassword, firstUserId);
             obj.saveData();
             clearScreen();
         }
@@ -353,7 +353,8 @@ int main() {
             cout << " 1) " << BOLD << "Add " << RESET << "User" << endl
                 << " 2) " << BOLD << "Remove " << RESET << "User" << endl
                 << " 3) " << BOLD << "View " << RESET << "Users" << endl
-                << " 4) " << BOLD << "Exit " << RESET << "Program" << endl;
+                << " 4) " << BOLD << "Exit " << RESET << endl
+                << " 5) " << BOLD << "Logout " << RESET << endl;
             string choice;
             printPrompt();
             cin >> choice;
@@ -377,7 +378,8 @@ int main() {
                 printPrompt();
                 cin >> userIdAdding;
                 string hashedUser = obj.hashUsername(userNameAdding);
-                obj.addUser(hashedUser, userRoleAdding, userPasswordAdding, userIdAdding);
+                string hashedPassword = obj.hashPassword(userPasswordAdding);
+                obj.addUser(hashedUser, userRoleAdding, hashedPassword, userIdAdding);
                 obj.saveData();
                 obj.saveToLog(choice);
             }
@@ -397,6 +399,10 @@ int main() {
                 obj.removeUser(hashedUserToRemove);
                 obj.saveData();
                 obj.saveToLog(choice);
+            }
+            else if (choice == "Logout") {
+                checkAdminLoggedInState = false;
+                correctLoginAdmin = false;
             }
             else if (choice == "Exit") {
                 use = false;
@@ -419,7 +425,6 @@ int main() {
             )";
         }
         else if (definedUser) {
-            obj.hashPassword("testing");
             cout << "Please login using your PiLocks account." << endl;
             cout << "What is your username?" << endl;
             printPrompt();

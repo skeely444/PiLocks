@@ -85,3 +85,6 @@ Desktop edition/userLogs.json
 Desktop edition/vcpkg.json
 Desktop edition/bcrypt.h
 Desktop edition/bcrypt.cpp
+Desktop edition/node_blf.h
+Desktop edition/openbsd.h
+Desktop edition/blowfish.cpp

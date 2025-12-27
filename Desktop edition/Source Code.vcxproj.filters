@@ -18,5 +18,11 @@
     <ClCompile Include="MainCodeRestiled.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="bcrypt.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="blowfish.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
 </Project>
