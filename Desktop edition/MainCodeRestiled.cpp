@@ -331,6 +331,7 @@ int main() {
             printPrompt();
             cin >> firstUserPassword;
             string hashedFirstUserName = obj.hashUsername(firstUserName);
+            cout << "Proccessing..." << endl;
             string hashedFirstPassword = obj.hashPassword(firstUserPassword);
             obj.addUser(hashedFirstUserName, firstUserRole, hashedFirstPassword, firstUserId);
             obj.saveData();
@@ -378,6 +379,7 @@ int main() {
                 printPrompt();
                 cin >> userIdAdding;
                 string hashedUser = obj.hashUsername(userNameAdding);
+                cout << "Proccessing..." << endl;
                 string hashedPassword = obj.hashPassword(userPasswordAdding);
                 obj.addUser(hashedUser, userRoleAdding, hashedPassword, userIdAdding);
                 obj.saveData();
@@ -433,6 +435,7 @@ int main() {
             printPrompt();
             cin >> passwordLoggingIn;
             string hashedUserLoggingIn = obj.hashUsername(userLoggingIn);
+            cout << "Proccessing..." << endl;
             correctLoginAdmin = obj.checkAdminAuthentication(hashedUserLoggingIn, passwordLoggingIn);
             if (correctLoginAdmin) {
                 obj.setLoggedInUser(userLoggingIn);  // Store the username
