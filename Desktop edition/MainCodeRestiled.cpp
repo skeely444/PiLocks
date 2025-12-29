@@ -45,12 +45,27 @@ public:
     void setLoggedInUser(string user) {
         loggedInUser = user;
     }
-    
     void addUser(string name, string role, string password, int id) {
         Usernames.push_back(name);
         Userroles.push_back(role);
         UserIds.push_back(id);
         Userpasswords.push_back(password);
+    }
+    bool checkIfUserOrOwnerExistAlready(string name, string role) {
+        bool Exists = false;
+        for (int i = 0; i < Usernames.size(); i++) {
+            if (name == Usernames[i]) {
+                cout << RED << "Sorry, this user already exists. Please use a different name." << RESET << endl;
+                this_thread::sleep_for(chrono::seconds(5));
+                Exists = true;
+            }
+            if (role == "Owner") {
+                cout << RED << "Sorry, there already is a user with the owner role, please use a different role." << RESET << endl;
+                this_thread::sleep_for(chrono::seconds(5));
+                Exists = true;
+            }
+        }
+        return Exists;
     }
     string hashUsername(string username) {
         vector <int> individualHash;
@@ -88,7 +103,7 @@ public:
     bool correctUserLogin = false;
     bool checkAdminAuthentication(string attemptedUser, string attemptedPassword) {
         for (int i = 0; i < Usernames.size(); i++) {
-            if (attemptedUser == Usernames[i] && bcrypt::validatePassword(attemptedPassword, Userpasswords[i]) && Userroles[i] == "Admin") {
+            if (attemptedUser == Usernames[i] && bcrypt::validatePassword(attemptedPassword, Userpasswords[i]) && (Userroles[i] == "Admin" || Userroles[i] == "Owner")) {
                 correctLoginAdmin = true;
             }
         }
@@ -112,7 +127,7 @@ public:
     bool checkIfUserLoggedIn() {
         bool UserAlreadySignedIn;
         UserAlreadySignedIn = false;
-        if (correctLoginAdmin) {
+        if (correctUserLogin) {
             UserAlreadySignedIn = true;
         }
         return UserAlreadySignedIn;
@@ -120,12 +135,18 @@ public:
     void removeUser(string removing) {
         for (int i = 0; i < Usernames.size(); i++) {
             if (removing == Usernames[i]) {
-                Usernames.erase(Usernames.begin() + i);
-                Userpasswords.erase(Userpasswords.begin() + i);
-                Userroles.erase(Userroles.begin() + i);
-                UserIds.erase(UserIds.begin() + i);
-                cout << "Removed user: " << removing << endl;  // Use the parameter, not the array
-                break;  // Exit after removing the first match
+                if (Userroles[i] != "Owner") {
+                    Usernames.erase(Usernames.begin() + i);
+                    Userpasswords.erase(Userpasswords.begin() + i);
+                    Userroles.erase(Userroles.begin() + i);
+                    UserIds.erase(UserIds.begin() + i);
+                    break;  // Exit after removing the first match
+                }
+                else if (Userroles[i] == "Owner") {
+                    cout << RED << "The user with the role 'Owner' can not be removed" << RESET << endl;
+                    this_thread::sleep_for(chrono::seconds(5));
+                    break;
+                }
             }
         }
     }
@@ -311,8 +332,10 @@ int main() {
     bool correctLoginAdmin = false;
     bool correctUserLogin = false;
     bool definedUser;
+    bool ownerPrivileges = false;
     while (use) {
         obj.loadData();
+        bool exists = false;
         checkAdminLoggedInState = obj.checkIfAdminLoggedIn();
         checkUserLoggedInState = obj.checkIfUserLoggedIn();
         definedUser = obj.checkIfUsers();
@@ -321,7 +344,7 @@ int main() {
         if (!definedUser) {
             string firstUserName;
             int firstUserId = 1;
-            string firstUserRole = "Admin";
+            string firstUserRole = "Owner";
             string firstUserPassword;
             cout << "Welcome to PiLocks. To start, please create a PiLocks account" << endl;
             cout << "How would you like to be called?" << endl;
@@ -354,8 +377,9 @@ int main() {
             cout << " 1) " << BOLD << "Add " << RESET << "User" << endl
                 << " 2) " << BOLD << "Remove " << RESET << "User" << endl
                 << " 3) " << BOLD << "View " << RESET << "Users" << endl
-                << " 4) " << BOLD << "Exit " << RESET << endl
-                << " 5) " << BOLD << "Logout " << RESET << endl;
+                << " 4) " << BOLD << "Promote " << RESET << "User (Owner only)" << endl
+                << " 5) " << BOLD << "Exit " << RESET << endl
+                << " 6) " << BOLD << "Logout " << RESET << endl;
             string choice;
             printPrompt();
             cin >> choice;
@@ -369,7 +393,7 @@ int main() {
                     << " Username: " << endl;
                 printPrompt();
                 cin >> userNameAdding;
-                cout << " Role: " << endl;
+                cout << " Role (Admin or User): " << endl;
                 printPrompt();
                 cin >> userRoleAdding;
                 cout << " Password: " << endl;
@@ -381,15 +405,18 @@ int main() {
                 string hashedUser = obj.hashUsername(userNameAdding);
                 cout << "Proccessing..." << endl;
                 string hashedPassword = obj.hashPassword(userPasswordAdding);
-                obj.addUser(hashedUser, userRoleAdding, hashedPassword, userIdAdding);
-                obj.saveData();
-                obj.saveToLog(choice);
+                exists = obj.checkIfUserOrOwnerExistAlready(hashedUser, userRoleAdding);
+                if (!exists) {
+                    obj.addUser(hashedUser, userRoleAdding, hashedPassword, userIdAdding);
+                    obj.saveData();
+                    obj.saveToLog(choice);
+                }
             }
             else if (choice == "View") {
                 clearScreen();
                 obj.returnAll();
                 obj.saveToLog(choice);
-                this_thread::sleep_for(chrono::seconds(10));
+                this_thread::sleep_for(chrono::seconds(5));
             }
             else if (choice == "Remove") {
                 clearScreen();
@@ -402,9 +429,16 @@ int main() {
                 obj.saveData();
                 obj.saveToLog(choice);
             }
+            else if (choice == "Promote") {
+                if (2 == 2) {
+                    cout << "Placeholder";
+                }
+            }
             else if (choice == "Logout") {
                 checkAdminLoggedInState = false;
                 correctLoginAdmin = false;
+                obj.correctLoginAdmin = false;
+                clearScreen();
             }
             else if (choice == "Exit") {
                 use = false;
