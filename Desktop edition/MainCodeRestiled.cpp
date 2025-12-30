@@ -20,9 +20,12 @@ const string RESET = "\033[0m";
 const string RED = "\033[31m";
 const string GREEN = "\033[32m";
 const string BLUE = "\033[34m";
+const string YELLOW = "\033[33m";
+const string CYAN = "\033[36m";
 const string BOLD = "\033[1m";
 const string DIM = "\033[2m";
 const string UNDERLINE = "\033[4m";
+const string ITALIC = "\033[3m";
 
 string getTimestamp()
 {
@@ -41,9 +44,13 @@ string getTimestamp()
 class UserProfile {
 public:
     string loggedInUser = "";  // Add this member variable
+    string clearLoggedInUser = "";
     
     void setLoggedInUser(string user) {
         loggedInUser = user;
+    }
+    void setClearLoggedInUser(string user) {
+        clearLoggedInUser = user;
     }
     void addUser(string name, string role, string password, int id) {
         Usernames.push_back(name);
@@ -67,11 +74,26 @@ public:
         }
         return Exists;
     }
+    bool checkOwnerPrivileges() {
+        bool hasOwnerRole = false;
+        for (int i = 0; i < Usernames.size(); i++) {
+            if ((Usernames[i] == loggedInUser) && (Userroles[i] == "Owner")) {
+                hasOwnerRole = true;
+                return hasOwnerRole;
+                break;
+            }
+            else
+            {
+                hasOwnerRole = false;
+            }
+        }
+        return hasOwnerRole;
+    }
     string hashUsername(string username) {
         vector <int> individualHash;
         for (int i = 0; i < username.length(); i++) {
             int AsciiChar = username[i];
-            int hashResult = (AsciiChar * AsciiChar) - (AsciiChar + AsciiChar) * (AsciiChar % 2) + AsciiChar;
+            int hashResult = (((AsciiChar * AsciiChar) - (AsciiChar + AsciiChar) * (AsciiChar % 2) + AsciiChar) / AsciiChar) * (AsciiChar * AsciiChar + AsciiChar);
             individualHash.push_back(hashResult);
         }
         string result = "";
@@ -82,12 +104,11 @@ public:
     }
     string hashPassword(string password) {
         string hashedPassword = bcrypt::generateHash(password);
-        cout << hashedPassword << endl;
         return hashedPassword;
     }
     void returnAll() {
         for (int i = 0; i < Usernames.size(); i++)
-            cout << Usernames[i] << endl << UserIds[i] << endl << Userroles[i] << endl;
+            cout << Usernames[i] << " " << UserIds[i] << " " << Userroles[i] << " " << endl;
     }
     bool checkIfUsers() {
         bool areUsers;
@@ -150,9 +171,21 @@ public:
             }
         }
     }
+    void promoteUser(string promoting) {
+        for (int i = 0; i < Usernames.size(); i++) {
+            if (promoting == Usernames[i] && Userroles[i] == "User") {
+                Userroles[i] = "Admin";
+                break;
+            }
+            else if (promoting == Usernames[i] && (Userroles[i] == "Admin" || Userroles[i] == "Owner")) {
+                cout << RED << "This person has admin permissions already" << RESET << endl;
+                this_thread::sleep_for(chrono::seconds(5));
+            }
+        }
+    }
     void saveToLog(string action) {  // Remove user parameter
         ActionsPerformed.push_back(action);
-        UserPerformed.push_back(loggedInUser);  // Use member variable
+        UserPerformed.push_back(clearLoggedInUser);  // Use member variable
         ActionTimestamps.push_back(getTimestamp());
 
         ofstream file("userLogs.json");
@@ -166,7 +199,7 @@ public:
             file << "      \"action\": \"" << ActionsPerformed[i] << "\",\n";
             file << "      \"time\": \"" << ActionTimestamps[i] << "\"\n";
 
-            if (i == Usernames.size() - 1)
+            if (i == ActionsPerformed.size() - 1)
                 file << "    }\n";
             else
                 file << "    },\n";
@@ -214,13 +247,16 @@ public:
         for (int i = 0; i < ActionsPerformed.size(); i++) {
             string timestamp = ActionTimestamps[i];  // Use stored timestamp
             if (ActionsPerformed[i] == "Add") {
-                cout << timestamp << " " << UserPerformed[i] << GREEN << " added" << RESET << " a new user" << endl;
+                cout << "[" << timestamp << "]" << " " << UserPerformed[i] << GREEN << " added" << RESET << " a new user" << endl;
             }
             else if (ActionsPerformed[i] == "View") {
-                cout << timestamp << " " << UserPerformed[i] << BLUE << " viewed" << RESET << " all the Users" << endl;
+                cout << "[" << timestamp << "]" << " " << UserPerformed[i] << BLUE << " viewed" << RESET << " all the Users" << endl;
             }
             else if (ActionsPerformed[i] == "Remove") {
-                cout << timestamp << " " << UserPerformed[i] << RED << " removed" << RESET << " a user" << endl;
+                cout << "[" << timestamp << "]" << " " << UserPerformed[i] << RED << " removed" << RESET << " a user" << endl;
+            }
+            else if (ActionsPerformed[i] == "Promote") {
+                cout << "[" << timestamp << "]" << " " << UserPerformed[i] << CYAN << " promoted" << RESET << " a user" << endl;
             }
         }
     }
@@ -354,7 +390,7 @@ int main() {
             printPrompt();
             cin >> firstUserPassword;
             string hashedFirstUserName = obj.hashUsername(firstUserName);
-            cout << "Proccessing..." << endl;
+            cout << "Processing..." << endl;
             string hashedFirstPassword = obj.hashPassword(firstUserPassword);
             obj.addUser(hashedFirstUserName, firstUserRole, hashedFirstPassword, firstUserId);
             obj.saveData();
@@ -371,6 +407,7 @@ int main() {
                      /_/   \_\__,_|_| |_| |_|_|_| |_| |____/ \__,_|___/_| |_|_.__/ \___/ \__,_|_|  \__,_|
                      ------------------------------------------------------------------------------------
             )" << endl;
+            cout << "Logged in as " << obj.clearLoggedInUser << endl << endl;
             cout << "Logs: " << endl;
             obj.getActivityLogs();
             cout << endl << "Available actions: " << endl;
@@ -403,7 +440,7 @@ int main() {
                 printPrompt();
                 cin >> userIdAdding;
                 string hashedUser = obj.hashUsername(userNameAdding);
-                cout << "Proccessing..." << endl;
+                cout << "Processing..." << endl;
                 string hashedPassword = obj.hashPassword(userPasswordAdding);
                 exists = obj.checkIfUserOrOwnerExistAlready(hashedUser, userRoleAdding);
                 if (!exists) {
@@ -424,14 +461,27 @@ int main() {
                 string userToRemove;
                 printPrompt();
                 cin >> userToRemove;
-                string hashedUserToRemove;
+                string hashedUserToRemove = obj.hashUsername(userToRemove);
                 obj.removeUser(hashedUserToRemove);
                 obj.saveData();
                 obj.saveToLog(choice);
             }
             else if (choice == "Promote") {
-                if (2 == 2) {
-                    cout << "Placeholder";
+                ownerPrivileges = obj.checkOwnerPrivileges();
+                if (ownerPrivileges) {
+                    clearScreen();
+                    string userToPromote;
+                    cout << "Which user would you like to promote to Admin?" << endl;
+                    printPrompt();
+                    cin >> userToPromote;
+                    string hashedUserToPromote = obj.hashUsername(userToPromote);
+                    obj.promoteUser(hashedUserToPromote);
+                    obj.saveToLog(choice);
+                    obj.saveData();
+                }
+                else {
+                    cout << RED << "Sorry, this function is owner only." << RESET << endl;
+                    this_thread::sleep_for(chrono::seconds(5));
                 }
             }
             else if (choice == "Logout") {
@@ -472,9 +522,11 @@ int main() {
             cout << "Proccessing..." << endl;
             correctLoginAdmin = obj.checkAdminAuthentication(hashedUserLoggingIn, passwordLoggingIn);
             if (correctLoginAdmin) {
-                obj.setLoggedInUser(userLoggingIn);  // Store the username
+                obj.setLoggedInUser(hashedUserLoggingIn);  // Store the username
+                obj.setClearLoggedInUser(userLoggingIn);  // Store the username
             }
             correctUserLogin = obj.checkUserAuthentication(hashedUserLoggingIn, passwordLoggingIn);
+            clearScreen();
         }
         else {
             cout << RED << "Something went wrong" << RESET << endl;
