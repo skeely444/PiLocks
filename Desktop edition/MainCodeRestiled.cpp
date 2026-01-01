@@ -264,7 +264,34 @@ public:
         }
     }
     void makeAppointment(string who, string when) {
-        UserAppointments;
+        UserAppointments.push_back(who);
+        UsersWithAppointments.push_back(clearLoggedInUser);
+        UserAppointmentsTimes.push_back(getTimestamp());
+        AppointmentStatus.push_back("Not approved");
+
+        ofstream file("userAppointments.json");
+
+        file << "{\n";
+        file << " \"Appointments\": [\n";
+
+        for (int i = 0; i < UserAppointments.size(); i++) {
+            file << "    {\n";
+            file << "      \user\": \"" << UsersWithAppointments[i] << "\",\n";
+            file << "      \type\": \"" << UserAppointments[i] << "\", \n";
+            file << "      \time\": \"" << UserAppointmentsTimes[i] << "\", \n";
+            file << "      \status\": \"" << AppointmentStatus[i] << "\"\n";
+
+            if (i == UserAppointments.size() - 1) {
+                file << "    }\n";
+            }
+            else
+                file << "    },\n";
+            
+        }
+        file << "  ]\n";
+        file << "}\n";
+
+        file.close();
     }
     void saveData() {
         ofstream file("userdata.json");
