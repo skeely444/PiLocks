@@ -30,61 +30,10 @@
 *.exe
 *.out
 *.app
+Desktop edition/Source Code
+Desktop edition/.vs/
 Source Code/userdata.json
-Source Code/.vs/Source Code.slnx/FileContentIndex/63e49b32-ea2a-45e2-8937-3f9a2ef61784.vsidx
-Source Code/.vs/Source Code.slnx/FileContentIndex/674afc41-e914-40a6-9a5f-94e205913e8d.vsidx
-Source Code/.vs/Source Code.slnx/FileContentIndex/cb5ce238-26d5-4558-9ec1-a923e85b9cb4.vsidx
-Source Code/.vs/Source Code.slnx/v18/.suo
-Source Code/.vs/Source Code.slnx/v18/Browse.VC.db
-Source Code/.vs/Source Code.slnx/v18/Browse.VC.db-shm
-Source Code/.vs/Source Code.slnx/v18/Browse.VC.db-wal
-Source Code/.vs/Source Code.slnx/v18/Browse.VC.opendb
-Source Code/.vs/Source Code.slnx/v18/DocumentLayout.backup.json
-Source Code/.vs/Source Code.slnx/v18/DocumentLayout.json
-Source Code/.vs/Source Code.slnx/v18/ipch/AutoPCH/6cfb3dd3a8c0eeb8/MAINCODE.ipch
-Source Code/.vs/Source Code.slnx/v18/ipch/AutoPCH/9d7b7898a239ccd8/SOURCE CODE.ipch
-Source Code/Source Code/x64/Debug/Source Code.exe.recipe
-Source Code/Source Code/x64/Debug/Source Code.ilk
-Source Code/Source Code/x64/Debug/Source Code.log
-Source Code/Source Code/x64/Debug/Source Code.tlog/CL.command.1.tlog
-Source Code/Source Code/x64/Debug/Source Code.tlog/Cl.items.tlog
-Source Code/Source Code/x64/Debug/Source Code.tlog/CL.read.1.tlog
-Source Code/Source Code/x64/Debug/Source Code.tlog/CL.write.1.tlog
-Source Code/Source Code/x64/Debug/Source Code.tlog/link.command.1.tlog
-Source Code/Source Code/x64/Debug/Source Code.tlog/link.read.1.tlog
-Source Code/Source Code/x64/Debug/Source Code.tlog/link.secondary.1.tlog
-Source Code/Source Code/x64/Debug/Source Code.tlog/link.write.1.tlog
-Source Code/Source Code/x64/Debug/Source Code.tlog/Source Code.lastbuildstate
-Source Code/Source Code/x64/Debug/vc145.idb
-Source Code/Source Code/x64/Debug/vc145.pdb
-Source Code/x64/Debug/Source Code.pdb
-Source Code/.vs/Source Code.slnx/FileContentIndex/12c9e528-480f-48fa-a127-f2b8f75c6fe0.vsidx
-Source Code/.vs/Source Code.slnx/FileContentIndex/369835e4-9f37-48b4-b8e9-7d37d7384a6e.vsidx
-Source Code/.vs/Source Code.slnx/FileContentIndex/3ccf7b73-52d5-43fb-b3c0-22f6cfdffb3e.vsidx
-Source Code/.vs/Source Code.slnx/FileContentIndex/84b18ea0-edaf-4b0e-b39f-24a59af865a9.vsidx
-Source Code/.vs/Source Code.slnx/v18/ipch/AutoPCH/471bbc0c01acd2ac/HEADER.ipch
-Source Code/.vs/Source Code.slnx/copilot-chat/f43199da/sessions/9121e678-e7c0-4c07-b19e-7ae5ad6d4587
-Source Code/.vs/Source Code.slnx/FileContentIndex/5872352c-56a7-4c08-8d87-723b9b96ecd9.vsidx
-Source Code/.vs/Source Code.slnx/FileContentIndex/910f1af2-38d3-4311-a018-c8260614423f.vsidx
-/Source Code/.vs
-Source Code/Logs.json
-Source Code/Source Code/x64/Debug/Source Code.tlog/unsuccessfulbuild
-Source Code/Source Code/x64/Debug/Source Code.tlog/link.read.4.tlog
-Source Code/Source Code/x64/Debug/Source Code.tlog/link.read.3.tlog
-Source Code/Source Code/x64/Debug/Source Code.tlog/link.read.2.tlog
-Source Code/Source Code/x64/Debug/Source Code.tlog/link-rc.write.1.tlog
-Source Code/Source Code/x64/Debug/Source Code.tlog/link-rc.read.1.tlog
-Source Code/Source Code/x64/Debug/Source Code.tlog/link-cvtres.write.1.tlog
-Source Code/Source Code/x64/Debug/Source Code.tlog/link-cvtres.read.1.tlog
-Source Code/userdataa.json
-/Desktop edition/.vs
-/Desktop edition/Source Code
 Desktop edition/userdata.json
-Desktop edition/x64/Debug/Source Code.pdb
 Desktop edition/userLogs.json
 Desktop edition/vcpkg.json
-Desktop edition/bcrypt.h
-Desktop edition/bcrypt.cpp
-Desktop edition/node_blf.h
-Desktop edition/openbsd.h
-Desktop edition/blowfish.cpp
+

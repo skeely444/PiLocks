@@ -258,7 +258,13 @@ public:
             else if (ActionsPerformed[i] == "Promote") {
                 cout << "[" << timestamp << "]" << " " << UserPerformed[i] << CYAN << " promoted" << RESET << " a user" << endl;
             }
+            else if (ActionsPerformed[i] == "Late") {
+                cout << "[" << timestamp << "]" << " " << UserPerformed[i] << " will be " << YELLOW << "late" << RESET << endl;
+            }
         }
+    }
+    void makeAppointment(string who, string when) {
+        UserAppointments;
     }
     void saveData() {
         ofstream file("userdata.json");
@@ -350,6 +356,10 @@ private:
     vector <string> ActionsPerformed;
     vector <string> UserPerformed;
     vector <string> ActionTimestamps;
+    vector <string> UsersWithAppointments;
+    vector <string> UserAppointments;
+    vector <string> UserAppointmentsTimes;
+    vector <string> AppointmentStatus;
 };
 
 int main() {
@@ -499,6 +509,8 @@ int main() {
             }
         }
         else if (correctUserLogin || checkUserLoggedInState) {
+            clearScreen();
+            string choice;
             cout << R"(
                      --------------------------------------------------------------------- 
                       _    _                 _____            _                         _ 
@@ -508,7 +520,46 @@ int main() {
                      | |__| \__ \  __/ |    | |__| | (_| \__ \ |_) | (_) | (_| | | | (_| |
                       \____/|___/\___|_|    |_____/ \__,_|___/_.__/ \___/ \__,_|_|  \__,_|
                      ---------------------------------------------------------------------
-            )";
+            )" << endl << endl;
+            cout << "Available actions: " << endl;
+            cout << " 1) Being " << BOLD << "Late" << RESET << endl
+                << " 2) Make " << BOLD << "Appointment" << RESET << endl
+                << " 3) " << BOLD << "Exit " << RESET << endl
+                << " 4) " << BOLD << "Logout " << RESET << endl;
+            printPrompt();
+            cin >> choice;
+            if (choice == "Late") {
+                clearScreen();
+                int minutes;
+                cout << "How late will you be?" << endl;
+                printPrompt();
+                cin >> minutes;
+                obj.saveToLog(choice);
+            }
+            else if (choice == "Appointment") {
+                clearScreen();
+                string whoAppointment;
+                string whenAppointment;
+                cout << "Who do you have an appointment with?" << endl;
+                printPrompt();
+                cin >> whoAppointment;
+                cout << "When is your appointment? [hh:mm]" << endl;
+                printPrompt();
+                cin >> whenAppointment;
+            }
+            else if (choice == "Logout") {
+                checkAdminLoggedInState = false;
+                correctLoginAdmin = false;
+                obj.correctLoginAdmin = false;
+                clearScreen();
+            }
+            else if (choice == "Exit") {
+                use = false;
+            }
+            else {
+                cout << RED << "No valid choice detected" << RESET << endl;
+                this_thread::sleep_for(chrono::seconds(5));
+            }
         }
         else if (definedUser) {
             cout << "Please login using your PiLocks account." << endl;
@@ -519,13 +570,13 @@ int main() {
             printPrompt();
             cin >> passwordLoggingIn;
             string hashedUserLoggingIn = obj.hashUsername(userLoggingIn);
-            cout << "Proccessing..." << endl;
+            cout << "Processing..." << endl;
             correctLoginAdmin = obj.checkAdminAuthentication(hashedUserLoggingIn, passwordLoggingIn);
-            if (correctLoginAdmin) {
-                obj.setLoggedInUser(hashedUserLoggingIn);  // Store the username
-                obj.setClearLoggedInUser(userLoggingIn);  // Store the username
-            }
             correctUserLogin = obj.checkUserAuthentication(hashedUserLoggingIn, passwordLoggingIn);
+            if (correctLoginAdmin || correctUserLogin) {
+                obj.setLoggedInUser(hashedUserLoggingIn);
+                obj.setClearLoggedInUser(userLoggingIn);
+            }
             clearScreen();
         }
         else {
