@@ -1,0 +1,10 @@
+{
+ "Appointments": [
+    {
+      "user": "Sam",
+      	"type": "Dentist", 
+      	"time": "18:16:55", 
+      "status": "Pending"
+    }
+  ]
+}

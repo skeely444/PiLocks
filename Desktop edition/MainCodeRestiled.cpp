@@ -20,8 +20,10 @@ const string RESET = "\033[0m";
 const string RED = "\033[31m";
 const string GREEN = "\033[32m";
 const string BLUE = "\033[34m";
+const string BRIGHTBLUE = "\033[94m";
 const string YELLOW = "\033[33m";
 const string CYAN = "\033[36m";
+const string MAGENTA = "\033[35m";
 const string BOLD = "\033[1m";
 const string DIM = "\033[2m";
 const string UNDERLINE = "\033[4m";
@@ -261,13 +263,19 @@ public:
             else if (ActionsPerformed[i] == "Late") {
                 cout << "[" << timestamp << "]" << " " << UserPerformed[i] << " will be " << YELLOW << "late" << RESET << endl;
             }
+            else if (ActionsPerformed[i] == "Appointment") {
+                cout << "[" << timestamp << "]" << " " << UserPerformed[i] << " made an " << MAGENTA << "appointment" << RESET << endl;
+            }
+            else if (ActionsPerformed[i] == "Approve") {
+                cout << "[" << timestamp << "]" << " " << UserPerformed[i] << BRIGHTBLUE << "approved" << RESET << " an appointment" << endl;
+            }
         }
     }
     void makeAppointment(string who, string when) {
         UserAppointments.push_back(who);
         UsersWithAppointments.push_back(clearLoggedInUser);
         UserAppointmentsTimes.push_back(getTimestamp());
-        AppointmentStatus.push_back("Not approved");
+        AppointmentStatus.push_back("Pending");
 
         ofstream file("userAppointments.json");
 
@@ -292,6 +300,66 @@ public:
         file << "}\n";
 
         file.close();
+    }
+    void getAppointments() {
+        ifstream file("userAppointments.json");
+
+        if (!file.is_open()) {
+            return;
+        }
+
+        UserAppointments.clear();
+        UsersWithAppointments.clear();
+        AppointmentStatus.clear();
+        UserAppointmentsTimes.clear();
+
+        string word;
+        while (file >> word) {
+            if (word == "\"user\":") {
+                string user;
+                file >> user;
+                user.erase(0, 1);
+                user.erase(user.size() - 2, 2);
+            }
+            else if (word == "\"type\":") {
+                string type;
+                file >> type;
+                type.erase(0, 1);
+                type.erase(type.size() - 2, 2);
+            }
+            else if (word == "\"time\":") {
+                string time;
+                file >> time;
+                time.erase(0, 1);
+                time.erase(time.size() - 2, 2);
+            }
+            else if (word == "\"status\":") {
+                string status;
+                file >> status;
+                status.erase(0, 1);
+                status.erase(status.size() - 2, 2);
+            }
+        }
+        file.close();
+
+        for (int i = 0; i < UserAppointments.size(); i++) {
+            if (AppointmentStatus[i] == "Pending") {
+                cout << "Pending: " << endl;
+                cout << " " << UsersWithAppointments[i] << " has an appointment with " << UserAppointments[i] << " at " << UserAppointmentsTimes[i] << "." << " This appointment hasn't been approved yet." << endl;
+            }
+        }
+        for (int i = 0; i < UserAppointments.size(); i++) {
+            if (AppointmentStatus[i] == "Approved") {
+                cout << endl << "Approved: " << endl;
+                cout << " " << UsersWithAppointments[i] << " has an appointment with " << UserAppointments[i] << " at " << UserAppointmentsTimes[i] << "." << " This appointment is approved." << endl;
+            }
+        }
+        for (int i = 0; i < UserAppointments.size(); i++) {
+            if (AppointmentStatus[i] == "Unapproved") {
+                cout << endl << "Unapproved: " << endl;
+                cout << " " << UsersWithAppointments[i] << " has an appointment with " << UserAppointments[i] << " at " << UserAppointmentsTimes[i] << "." << " This appointment is unapproved." << endl;
+            }
+        }
     }
     void saveData() {
         ofstream file("userdata.json");
@@ -451,9 +519,10 @@ int main() {
             cout << " 1) " << BOLD << "Add " << RESET << "User" << endl
                 << " 2) " << BOLD << "Remove " << RESET << "User" << endl
                 << " 3) " << BOLD << "View " << RESET << "Users" << endl
-                << " 4) " << BOLD << "Promote " << RESET << "User (Owner only)" << endl
-                << " 5) " << BOLD << "Exit " << RESET << endl
-                << " 6) " << BOLD << "Logout " << RESET << endl;
+                << " 4) " << BOLD << "Approve " << RESET << "Appointment" << endl
+                << " 5) " << BOLD << "Promote " << RESET << "User (Owner only)" << endl
+                << " 6) " << BOLD << "Exit " << RESET << endl
+                << " 7) " << BOLD << "Logout " << RESET << endl;
             string choice;
             printPrompt();
             cin >> choice;
@@ -521,6 +590,10 @@ int main() {
                     this_thread::sleep_for(chrono::seconds(5));
                 }
             }
+            else if (choice == "Approve") {
+                obj.getAppointments();
+                obj.saveToLog(choice);
+            }
             else if (choice == "Logout") {
                 checkAdminLoggedInState = false;
                 correctLoginAdmin = false;
@@ -573,6 +646,8 @@ int main() {
                 cout << "When is your appointment? [hh:mm]" << endl;
                 printPrompt();
                 cin >> whenAppointment;
+                obj.makeAppointment(whoAppointment, whenAppointment);
+                obj.saveToLog(choice);
             }
             else if (choice == "Logout") {
                 checkAdminLoggedInState = false;
