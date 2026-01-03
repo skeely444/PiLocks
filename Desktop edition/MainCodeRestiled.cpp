@@ -267,14 +267,14 @@ public:
                 cout << "[" << timestamp << "]" << " " << UserPerformed[i] << " made an " << MAGENTA << "appointment" << RESET << endl;
             }
             else if (ActionsPerformed[i] == "Approve") {
-                cout << "[" << timestamp << "]" << " " << UserPerformed[i] << BRIGHTBLUE << "approved" << RESET << " an appointment" << endl;
+                cout << "[" << timestamp << "]" << " " << UserPerformed[i] << BRIGHTBLUE << " approved" << RESET << " an appointment" << endl;
             }
         }
     }
     void makeAppointment(string who, string when) {
         UserAppointments.push_back(who);
         UsersWithAppointments.push_back(clearLoggedInUser);
-        UserAppointmentsTimes.push_back(getTimestamp());
+        UserAppointmentsTimes.push_back(when);
         AppointmentStatus.push_back("Pending");
 
         ofstream file("userAppointments.json");
@@ -284,10 +284,10 @@ public:
 
         for (int i = 0; i < UserAppointments.size(); i++) {
             file << "    {\n";
-            file << "      \user\": \"" << UsersWithAppointments[i] << "\",\n";
-            file << "      \type\": \"" << UserAppointments[i] << "\", \n";
-            file << "      \time\": \"" << UserAppointmentsTimes[i] << "\", \n";
-            file << "      \status\": \"" << AppointmentStatus[i] << "\"\n";
+            file << "      \"user\": \"" << UsersWithAppointments[i] << "\",\n";
+            file << "      \"type\": \"" << UserAppointments[i] << "\", \n";
+            file << "      \"time\": \"" << UserAppointmentsTimes[i] << "\", \n";
+            file << "      \"status\": \"" << AppointmentStatus[i] << "\"\n";
 
             if (i == UserAppointments.size() - 1) {
                 file << "    }\n";
@@ -320,27 +320,35 @@ public:
                 file >> user;
                 user.erase(0, 1);
                 user.erase(user.size() - 2, 2);
+                UsersWithAppointments.push_back(user);
             }
             else if (word == "\"type\":") {
                 string type;
                 file >> type;
                 type.erase(0, 1);
                 type.erase(type.size() - 2, 2);
+                UserAppointments.push_back(type);
             }
             else if (word == "\"time\":") {
                 string time;
                 file >> time;
                 time.erase(0, 1);
                 time.erase(time.size() - 2, 2);
+                UserAppointmentsTimes.push_back(time);
             }
             else if (word == "\"status\":") {
                 string status;
                 file >> status;
                 status.erase(0, 1);
-                status.erase(status.size() - 2, 2);
+                status.erase(status.size() - 1, 1);
+                AppointmentStatus.push_back(status);
             }
         }
         file.close();
+
+        for (int i = 0; i < AppointmentStatus.size(); i++) {
+            cout << "Status " << i << ": [" << AppointmentStatus[i] << "]" << endl;
+        }
 
         for (int i = 0; i < UserAppointments.size(); i++) {
             if (AppointmentStatus[i] == "Pending") {
@@ -650,9 +658,9 @@ int main() {
                 obj.saveToLog(choice);
             }
             else if (choice == "Logout") {
-                checkAdminLoggedInState = false;
-                correctLoginAdmin = false;
-                obj.correctLoginAdmin = false;
+                checkUserLoggedInState = false;
+                correctUserLogin = false;
+                obj.correctUserLogin = false;
                 clearScreen();
             }
             else if (choice == "Exit") {
