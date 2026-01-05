@@ -5,6 +5,7 @@
 #include <thread>
 #include <chrono>
 #include <ctime>
+#include <algorithm>
 #include "bcrypt.h"
 using namespace std;
 
@@ -180,7 +181,7 @@ public:
                 break;
             }
             else if (promoting == Usernames[i] && (Userroles[i] == "Admin" || Userroles[i] == "Owner")) {
-                cout << RED << "This person has admin permissions already" << RESET << endl;
+                cout << RED << "This person already has admin permissions" << RESET << endl;
                 this_thread::sleep_for(chrono::seconds(5));
             }
         }
@@ -241,7 +242,7 @@ public:
                 string time;
                 file >> time;
                 time.erase(0, 1);
-                time.erase(time.size() - 2, 2);
+                time.erase(time.size() -1, 1);
                 ActionTimestamps.push_back(time);
             }
         }
@@ -301,6 +302,31 @@ public:
 
         file.close();
     }
+    void saveAppointment() {
+        ofstream file("userAppointments.json");
+
+        file << "{\n";
+        file << " \"Appointments\": [\n";
+
+        for (int i = 0; i < UserAppointments.size(); i++) {
+            file << "    {\n";
+            file << "      \"user\": \"" << UsersWithAppointments[i] << "\",\n";
+            file << "      \"type\": \"" << UserAppointments[i] << "\", \n";
+            file << "      \"time\": \"" << UserAppointmentsTimes[i] << "\", \n";
+            file << "      \"status\": \"" << AppointmentStatus[i] << "\"\n";
+
+            if (i == UserAppointments.size() - 1) {
+                file << "    }\n";
+            }
+            else
+                file << "    },\n";
+
+        }
+        file << "  ]\n";
+        file << "}\n";
+
+        file.close();
+    }
     void getAppointments() {
         ifstream file("userAppointments.json");
 
@@ -346,9 +372,6 @@ public:
         }
         file.close();
 
-        for (int i = 0; i < AppointmentStatus.size(); i++) {
-            cout << "Status " << i << ": [" << AppointmentStatus[i] << "]" << endl;
-        }
 
         for (int i = 0; i < UserAppointments.size(); i++) {
             if (AppointmentStatus[i] == "Pending") {
@@ -366,6 +389,17 @@ public:
             if (AppointmentStatus[i] == "Unapproved") {
                 cout << endl << "Unapproved: " << endl;
                 cout << " " << UsersWithAppointments[i] << " has an appointment with " << UserAppointments[i] << " at " << UserAppointmentsTimes[i] << "." << " This appointment is unapproved." << endl;
+            }
+        }
+    }
+    void approveAppointment(string whoApprove) {
+        if (whoApprove == "Cancel") {
+            return;
+        }
+        for (int i = 0; i < UsersWithAppointments.size(); i++) {
+            if (UsersWithAppointments[i] == whoApprove) {
+                AppointmentStatus[i] = "Approved";
+                cout << "Appointment approved";
             }
         }
     }
@@ -523,6 +557,8 @@ int main() {
             cout << "Logged in as " << obj.clearLoggedInUser << endl << endl;
             cout << "Logs: " << endl;
             obj.getActivityLogs();
+            cout << endl << "Appointments: ";
+            obj.getAppointments();
             cout << endl << "Available actions: " << endl;
             cout << " 1) " << BOLD << "Add " << RESET << "User" << endl
                 << " 2) " << BOLD << "Remove " << RESET << "User" << endl
@@ -599,7 +635,12 @@ int main() {
                 }
             }
             else if (choice == "Approve") {
-                obj.getAppointments();
+                cout << endl << "Which appointment would you like to approve?" << endl;
+                printPrompt();
+                string toApprove;
+                cin >> toApprove;
+                obj.approveAppointment(toApprove);
+                obj.saveAppointment();
                 obj.saveToLog(choice);
             }
             else if (choice == "Logout") {
