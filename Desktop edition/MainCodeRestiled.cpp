@@ -5,9 +5,10 @@
 #include <thread>
 #include <chrono>
 #include <ctime>
-#include <algorithm>
+#include <filesystem>
 #include "bcrypt.h"
 using namespace std;
+namespace fs = std::filesystem;
 
 
 
@@ -46,6 +47,7 @@ string getTimestamp()
 
 class UserProfile {
 public:
+    bool change = false;
     string loggedInUser = "";  // Add this member variable
     string clearLoggedInUser = "";
     
@@ -190,6 +192,8 @@ public:
         ActionsPerformed.push_back(action);
         UserPerformed.push_back(clearLoggedInUser);  // Use member variable
         ActionTimestamps.push_back(getTimestamp());
+
+        change = true;
 
         ofstream file("userLogs.json");
 
@@ -564,6 +568,7 @@ int main() {
                 << " 2) " << BOLD << "Remove " << RESET << "User" << endl
                 << " 3) " << BOLD << "View " << RESET << "Users" << endl
                 << " 4) " << BOLD << "Approve " << RESET << "Appointment" << endl
+                << " 5) " << BOLD << "Monitor " << RESET << "Live logs" << endl
                 << " 5) " << BOLD << "Promote " << RESET << "User (Owner only)" << endl
                 << " 6) " << BOLD << "Exit " << RESET << endl
                 << " 7) " << BOLD << "Logout " << RESET << endl;
@@ -642,6 +647,23 @@ int main() {
                 obj.approveAppointment(toApprove);
                 obj.saveAppointment();
                 obj.saveToLog(choice);
+            }
+            else if (choice == "Monitor") {
+                bool yes = true;
+                auto lastModified = fs::last_write_time("userLogs.json");
+                while (yes) {
+                    this_thread::sleep_for(chrono::seconds(5));
+                    auto currentModifiedTime = fs::last_write_time("userLogs.json");
+                    if (lastModified != currentModifiedTime) {
+                        clearScreen();
+                        cout << "Logs: " << endl;
+                        obj.getActivityLogs();
+                        lastModified = currentModifiedTime;
+                    }
+                    else {
+                        cout << RED << "Waiting for changes" << RESET << endl;
+                    }
+                }
             }
             else if (choice == "Logout") {
                 checkAdminLoggedInState = false;
