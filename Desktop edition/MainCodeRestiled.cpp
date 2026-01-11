@@ -23,6 +23,7 @@ const string RED = "\033[31m";
 const string GREEN = "\033[32m";
 const string BLUE = "\033[34m";
 const string BRIGHTBLUE = "\033[94m";
+const string BRIGHTCYAN = "\033[96m";
 const string YELLOW = "\033[33m";
 const string CYAN = "\033[36m";
 const string MAGENTA = "\033[35m";
@@ -72,7 +73,7 @@ public:
                 Exists = true;
             }
             if (role == "Owner") {
-                cout << RED << "Sorry, there already is a user with the owner role, please use a different role." << RESET << endl;
+                cout << RED << "Sorry, there is already a user with the owner role. Please use a different role." << RESET << endl;
                 this_thread::sleep_for(chrono::seconds(5));
                 Exists = true;
             }
@@ -162,6 +163,7 @@ public:
         for (int i = 0; i < Usernames.size(); i++) {
             if (removing == Usernames[i]) {
                 if (Userroles[i] != "Owner") {
+                    RemovedUsers.push_back(removing);
                     Usernames.erase(Usernames.begin() + i);
                     Userpasswords.erase(Userpasswords.begin() + i);
                     Userroles.erase(Userroles.begin() + i);
@@ -169,12 +171,25 @@ public:
                     break;  // Exit after removing the first match
                 }
                 else if (Userroles[i] == "Owner") {
-                    cout << RED << "The user with the role 'Owner' can not be removed" << RESET << endl;
+                    cout << RED << "The user with the role 'Owner' cannot be removed." << RESET << endl;
                     this_thread::sleep_for(chrono::seconds(5));
                     break;
                 }
             }
         }
+    }
+    bool antiAdminAbuse(string trying) {
+        bool abused = false;
+        for (int i = 0; i < RemovedUsers.size(); i++) {
+            if (trying == RemovedUsers[i]) {
+                abused = true;
+                break;
+            }
+            else {
+                abused = false;
+            }
+        }
+        return abused;
     }
     void promoteUser(string promoting) {
         for (int i = 0; i < Usernames.size(); i++) {
@@ -183,7 +198,7 @@ public:
                 break;
             }
             else if (promoting == Usernames[i] && (Userroles[i] == "Admin" || Userroles[i] == "Owner")) {
-                cout << RED << "This person already has admin permissions" << RESET << endl;
+                cout << RED << "This person already has admin permissions." << RESET << endl;
                 this_thread::sleep_for(chrono::seconds(5));
             }
         }
@@ -246,7 +261,7 @@ public:
                 string time;
                 file >> time;
                 time.erase(0, 1);
-                time.erase(time.size() -1, 1);
+                time.erase(time.size() - 1, 1);
                 ActionTimestamps.push_back(time);
             }
         }
@@ -254,26 +269,48 @@ public:
         for (int i = 0; i < ActionsPerformed.size(); i++) {
             string timestamp = ActionTimestamps[i];  // Use stored timestamp
             if (ActionsPerformed[i] == "Add") {
-                cout << "[" << timestamp << "]" << " " << UserPerformed[i] << GREEN << " added" << RESET << " a new user" << endl;
+                cout << "[" << timestamp << "]" << " " << UserPerformed[i] << GREEN << " added" << RESET << " a new user." << endl;
             }
             else if (ActionsPerformed[i] == "View") {
-                cout << "[" << timestamp << "]" << " " << UserPerformed[i] << BLUE << " viewed" << RESET << " all the Users" << endl;
+                cout << "[" << timestamp << "]" << " " << UserPerformed[i] << BLUE << " viewed" << RESET << " all users." << endl;
             }
             else if (ActionsPerformed[i] == "Remove") {
-                cout << "[" << timestamp << "]" << " " << UserPerformed[i] << RED << " removed" << RESET << " a user" << endl;
+                cout << "[" << timestamp << "]" << " " << UserPerformed[i] << RED << " removed" << RESET << " a user." << endl;
             }
             else if (ActionsPerformed[i] == "Promote") {
-                cout << "[" << timestamp << "]" << " " << UserPerformed[i] << CYAN << " promoted" << RESET << " a user" << endl;
+                cout << "[" << timestamp << "]" << " " << UserPerformed[i] << CYAN << " promoted" << RESET << " a user." << endl;
             }
             else if (ActionsPerformed[i] == "Late") {
-                cout << "[" << timestamp << "]" << " " << UserPerformed[i] << " will be " << YELLOW << "late" << RESET << endl;
+                cout << "[" << timestamp << "]" << " " << UserPerformed[i] << " will be " << YELLOW << "late." << RESET << endl;
             }
             else if (ActionsPerformed[i] == "Appointment") {
-                cout << "[" << timestamp << "]" << " " << UserPerformed[i] << " made an " << MAGENTA << "appointment" << RESET << endl;
+                cout << "[" << timestamp << "]" << " " << UserPerformed[i] << " made an " << MAGENTA << "appointment." << RESET << endl;
             }
             else if (ActionsPerformed[i] == "Approve") {
-                cout << "[" << timestamp << "]" << " " << UserPerformed[i] << BRIGHTBLUE << " approved" << RESET << " an appointment" << endl;
+                cout << "[" << timestamp << "]" << " " << UserPerformed[i] << BRIGHTBLUE << " approved" << RESET << " an appointment." << endl;
             }
+            else if (ActionsPerformed[i] == "Clear") {
+                cout << "[" << timestamp << "]" << " " << UserPerformed[i] << BRIGHTCYAN << " cleared" << RESET << " the logs." << endl;
+            }
+        }
+    }
+    void clearLogs(string confirmation) {
+        if (filesystem::exists("userLogs.json")) {
+            if (confirmation == "Yes" || confirmation == "yes") {
+                filesystem::remove("userLogs.json");
+                cout << GREEN << "Logs removed successfully." << RESET << endl;
+                this_thread::sleep_for(chrono::seconds(5));
+            }
+            else {
+                cout << RED << "Action canceled." << RESET << endl;
+                this_thread::sleep_for(chrono::seconds(5));
+                return;
+            }
+        }
+        else {
+            cout << RED << "There are no logs." << RESET << endl;
+            this_thread::sleep_for(chrono::seconds(5));
+            return;
         }
     }
     void makeAppointment(string who, string when) {
@@ -290,8 +327,8 @@ public:
         for (int i = 0; i < UserAppointments.size(); i++) {
             file << "    {\n";
             file << "      \"user\": \"" << UsersWithAppointments[i] << "\",\n";
-            file << "      \"type\": \"" << UserAppointments[i] << "\", \n";
-            file << "      \"time\": \"" << UserAppointmentsTimes[i] << "\", \n";
+            file << "      \"type\": \"" << UserAppointments[i] << "\",\n";
+            file << "      \"time\": \"" << UserAppointmentsTimes[i] << "\",\n";
             file << "      \"status\": \"" << AppointmentStatus[i] << "\"\n";
 
             if (i == UserAppointments.size() - 1) {
@@ -315,8 +352,8 @@ public:
         for (int i = 0; i < UserAppointments.size(); i++) {
             file << "    {\n";
             file << "      \"user\": \"" << UsersWithAppointments[i] << "\",\n";
-            file << "      \"type\": \"" << UserAppointments[i] << "\", \n";
-            file << "      \"time\": \"" << UserAppointmentsTimes[i] << "\", \n";
+            file << "      \"type\": \"" << UserAppointments[i] << "\",\n";
+            file << "      \"time\": \"" << UserAppointmentsTimes[i] << "\",\n";
             file << "      \"status\": \"" << AppointmentStatus[i] << "\"\n";
 
             if (i == UserAppointments.size() - 1) {
@@ -379,20 +416,20 @@ public:
 
         for (int i = 0; i < UserAppointments.size(); i++) {
             if (AppointmentStatus[i] == "Pending") {
-                cout << "Pending: " << endl;
-                cout << " " << UsersWithAppointments[i] << " has an appointment with " << UserAppointments[i] << " at " << UserAppointmentsTimes[i] << "." << " This appointment hasn't been approved yet." << endl;
+                cout << " Pending:" << endl;
+                cout << " " << UsersWithAppointments[i] << " has an appointment with " << UserAppointments[i] << " at " << UserAppointmentsTimes[i] << ". This appointment has not been approved yet." << endl;
             }
         }
         for (int i = 0; i < UserAppointments.size(); i++) {
             if (AppointmentStatus[i] == "Approved") {
-                cout << endl << "Approved: " << endl;
-                cout << " " << UsersWithAppointments[i] << " has an appointment with " << UserAppointments[i] << " at " << UserAppointmentsTimes[i] << "." << " This appointment is approved." << endl;
+                cout << endl << " Approved:" << endl;
+                cout << " " << UsersWithAppointments[i] << " has an appointment with " << UserAppointments[i] << " at " << UserAppointmentsTimes[i] << ". This appointment is approved." << endl;
             }
         }
         for (int i = 0; i < UserAppointments.size(); i++) {
             if (AppointmentStatus[i] == "Unapproved") {
-                cout << endl << "Unapproved: " << endl;
-                cout << " " << UsersWithAppointments[i] << " has an appointment with " << UserAppointments[i] << " at " << UserAppointmentsTimes[i] << "." << " This appointment is unapproved." << endl;
+                cout << endl << " Unapproved:" << endl;
+                cout << " " << UsersWithAppointments[i] << " has an appointment with " << UserAppointments[i] << " at " << UserAppointmentsTimes[i] << ". This appointment is unapproved." << endl;
             }
         }
     }
@@ -403,7 +440,7 @@ public:
         for (int i = 0; i < UsersWithAppointments.size(); i++) {
             if (UsersWithAppointments[i] == whoApprove) {
                 AppointmentStatus[i] = "Approved";
-                cout << "Appointment approved";
+                cout << "Appointment approved.";
             }
         }
     }
@@ -501,6 +538,7 @@ private:
     vector <string> UserAppointments;
     vector <string> UserAppointmentsTimes;
     vector <string> AppointmentStatus;
+    vector <string> RemovedUsers;
 };
 
 int main() {
@@ -533,7 +571,7 @@ int main() {
             int firstUserId = 1;
             string firstUserRole = "Owner";
             string firstUserPassword;
-            cout << "Welcome to PiLocks. To start, please create a PiLocks account" << endl;
+            cout << "Welcome to PiLocks. To start, please create a PiLocks account." << endl;
             cout << "How would you like to be called?" << endl;
             printPrompt();
             cin >> firstUserName;
@@ -559,19 +597,20 @@ int main() {
                      ------------------------------------------------------------------------------------
             )" << endl;
             cout << "Logged in as " << obj.clearLoggedInUser << endl << endl;
-            cout << "Logs: " << endl;
+            cout << "Logs:" << endl;
             obj.getActivityLogs();
-            cout << endl << "Appointments: ";
+            cout << endl << "Appointments:" << endl;
             obj.getAppointments();
-            cout << endl << "Available actions: " << endl;
+            cout << endl << "Available actions:" << endl;
             cout << " 1) " << BOLD << "Add " << RESET << "User" << endl
                 << " 2) " << BOLD << "Remove " << RESET << "User" << endl
                 << " 3) " << BOLD << "View " << RESET << "Users" << endl
                 << " 4) " << BOLD << "Approve " << RESET << "Appointment" << endl
                 << " 5) " << BOLD << "Monitor " << RESET << "Live logs" << endl
-                << " 5) " << BOLD << "Promote " << RESET << "User (Owner only)" << endl
-                << " 6) " << BOLD << "Exit " << RESET << endl
-                << " 7) " << BOLD << "Logout " << RESET << endl;
+                << " 6) " << BOLD << "Promote " << RESET << "User (Owner only)" << endl
+                << " 7) " << BOLD << "Clear " << RESET << "Logs (Owner only)" << endl
+                << " 8) " << BOLD << "Exit" << RESET << endl
+                << " 9) " << BOLD << "Logout" << RESET << endl;
             string choice;
             printPrompt();
             cin >> choice;
@@ -580,28 +619,36 @@ int main() {
                 string userRoleAdding;
                 string userPasswordAdding;
                 int userIdAdding;
+                bool antiRaidTriggered = false;
                 clearScreen();
-                cout << "Please enter the details of the new user below" << endl
-                    << " Username: " << endl;
+                cout << "Please enter the details of the new user below:" << endl
+                    << " Username:" << endl;
                 printPrompt();
                 cin >> userNameAdding;
-                cout << " Role (Admin or User): " << endl;
+                cout << " Role (Admin or User):" << endl;
                 printPrompt();
                 cin >> userRoleAdding;
-                cout << " Password: " << endl;
+                cout << " Password:" << endl;
                 printPrompt();
                 cin >> userPasswordAdding;
-                cout << " Id: " << endl;
+                cout << " ID:" << endl;
                 printPrompt();
                 cin >> userIdAdding;
                 string hashedUser = obj.hashUsername(userNameAdding);
                 cout << "Processing..." << endl;
                 string hashedPassword = obj.hashPassword(userPasswordAdding);
-                exists = obj.checkIfUserOrOwnerExistAlready(hashedUser, userRoleAdding);
-                if (!exists) {
-                    obj.addUser(hashedUser, userRoleAdding, hashedPassword, userIdAdding);
-                    obj.saveData();
-                    obj.saveToLog(choice);
+                antiRaidTriggered = obj.antiAdminAbuse(hashedUser);
+                if (!antiRaidTriggered) {
+                    exists = obj.checkIfUserOrOwnerExistAlready(hashedUser, userRoleAdding);
+                    if (!exists) {
+                        obj.addUser(hashedUser, userRoleAdding, hashedPassword, userIdAdding);
+                        obj.saveData();
+                        obj.saveToLog(choice);
+                    }
+                }
+                else if (antiRaidTriggered) {
+                    cout << RED << "The user you are trying to add has been removed recently. To prevent abuse, this user cannot be added within a chosen timeframe." << RESET << endl;
+                    this_thread::sleep_for(chrono::seconds(5));
                 }
             }
             else if (choice == "View") {
@@ -652,17 +699,32 @@ int main() {
                 bool yes = true;
                 auto lastModified = fs::last_write_time("userLogs.json");
                 while (yes) {
-                    this_thread::sleep_for(chrono::seconds(5));
                     auto currentModifiedTime = fs::last_write_time("userLogs.json");
                     if (lastModified != currentModifiedTime) {
                         clearScreen();
-                        cout << "Logs: " << endl;
+                        cout << "Logs:" << endl;
                         obj.getActivityLogs();
                         lastModified = currentModifiedTime;
                     }
                     else {
-                        cout << RED << "Waiting for changes" << RESET << endl;
+                        cout << RED << "Waiting for changes." << RESET << endl;
                     }
+                    this_thread::sleep_for(chrono::seconds(5));
+                }
+            }
+            else if (choice == "Clear") {
+                ownerPrivileges = obj.checkOwnerPrivileges();
+                if (ownerPrivileges) {
+                    string sure;
+                    cout << "Do you really want to delete the logs? This action cannot be undone." << endl;
+                    printPrompt();
+                    cin >> sure;
+                    obj.clearLogs(sure);
+                    obj.saveToLog(choice);
+                }
+                else {
+                    cout << RED << "Sorry, this function is owner only." << RESET << endl;
+                    this_thread::sleep_for(chrono::seconds(5));
                 }
             }
             else if (choice == "Logout") {
@@ -675,7 +737,7 @@ int main() {
                 use = false;
             }
             else {
-                cout << RED << "No valid choice detected" << RESET << endl;
+                cout << RED << "No valid choice detected." << RESET << endl;
                 this_thread::sleep_for(chrono::seconds(5));
             }
         }
@@ -692,11 +754,11 @@ int main() {
                       \____/|___/\___|_|    |_____/ \__,_|___/_.__/ \___/ \__,_|_|  \__,_|
                      ---------------------------------------------------------------------
             )" << endl << endl;
-            cout << "Available actions: " << endl;
+            cout << "Available actions:" << endl;
             cout << " 1) Being " << BOLD << "Late" << RESET << endl
                 << " 2) Make " << BOLD << "Appointment" << RESET << endl
-                << " 3) " << BOLD << "Exit " << RESET << endl
-                << " 4) " << BOLD << "Logout " << RESET << endl;
+                << " 3) " << BOLD << "Exit" << RESET << endl
+                << " 4) " << BOLD << "Logout" << RESET << endl;
             printPrompt();
             cin >> choice;
             if (choice == "Late") {
@@ -730,7 +792,7 @@ int main() {
                 use = false;
             }
             else {
-                cout << RED << "No valid choice detected" << RESET << endl;
+                cout << RED << "No valid choice detected." << RESET << endl;
                 this_thread::sleep_for(chrono::seconds(5));
             }
         }
@@ -753,7 +815,7 @@ int main() {
             clearScreen();
         }
         else {
-            cout << RED << "Something went wrong" << RESET << endl;
+            cout << RED << "Something went wrong." << RESET << endl;
             this_thread::sleep_for(chrono::seconds(5));
         }
     }
