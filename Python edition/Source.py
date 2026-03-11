@@ -1,3 +1,4 @@
+from base64 import encode
 import json
 import os
 import time
@@ -19,6 +20,12 @@ Actions = []
 UserDidAction = []
 ActionTimeStamp = []
 JSONifiedUser = ''
+authorized = False
+userNameLoggingIn = ''
+userPasswordLoggingIn = ''
+
+def clearScreen():
+    os.system('cls' if os.name == 'nt' else 'clear')
 
 def createUser(name, password, role):
     exist = False
@@ -62,15 +69,64 @@ def saveUsersToDataFile():
 def loadUsersToDataFile():
     global UserList
     UserList.clear()
-    with open("Users.json", "r") as json_file:
-       UserList = (json.load(json_file))  
+    try:
+        with open("Users.json", "r") as json_file:
+           UserList = (json.load(json_file))
+    except:
+        return
+       
+def checkAuthentication(username, password):
+    global authorized
+    for index in range(len(UserList)):
+        encodedCorrectPassword = UserList[index]["Password"].encode('utf-8')
+        encodedTriedPassword = password.encode('utf-8')
+        if UserList[index]["Name"] == username and bc.checkpw(encodedTriedPassword, encodedCorrectPassword):
+            authorized = True
+            return authorized
+    print(f"{Fore.RED}Sorry, this info is incorrect")
+    time.sleep(1.0)
+    return
+def getRole(user):
+    for index in range(len(UserList)):
+        if UserList[index]["Name"] == user:
+            role = UserList[index]["Role"]
+            return role
 
-print(r"""
+use = True
+while (use):
+    clearScreen()
+    print(r"""
                                              ___       _                    _            
                                             (  _`\  _ ( )                  ( )
                                             | |_) )(_)| |       _      ___ | |/')   ___  
                                             | ,__/'| || |  _  /'_`\  /'___)| , <  /',__) 
                                             | |    | || |_( )( (_) )( (___ | |\`\ \__, \ 
                                             (_)    (_)(____/'`\___/'`\____)(_) (_)(____/ 
-""")
-use = True
+    """)
+    loadUsersToDataFile()
+    if len(UserList) == 0:
+        print('Welcome to the PiLocks dashboard. Please start by making an account.')
+        toBeCalled = input(f"Wich name would you like to use? \n{Fore.CYAN}>{Fore.RESET}")
+        passwordToUse = input(f"Wich password would you like to use? \n{Fore.CYAN}>{Fore.RESET}")
+        userRole = "Owner"
+        createUser(toBeCalled, passwordToUse, userRole)
+    elif authorized:
+        userRole = getRole(userNameLoggingIn)
+        clearScreen()
+        if userRole == "Admin" or userRole == "Owner":
+            print(r"""
+                           ------------------------------------------------------------------------------------
+                               _       _           _         ____            _     _                         _ 
+                              / \   __| |_ __ ___ (_)_ __   |  _ \  __ _ ___| |__ | |__   ___   __ _ _ __ __| |
+                             / _ \ / _` | '_ ` _ \| | '_ \  | | | |/ _` / __| '_ \| '_ \ / _ \ / _` | '__/ _` |
+                            / ___ \ (_| | | | | | | | | | | | |_| | (_| \__ \ | | | |_) | (_) | (_| | | | (_| |
+                           /_/   \_\__,_|_| |_| |_|_|_| |_| |____/ \__,_|___/_| |_|_.__/ \___/ \__,_|_|  \__,_|
+                           ------------------------------------------------------------------------------------
+            """)
+            print(f"Logged in as {userNameLoggingIn}")
+            input()
+    elif len(UserList) > 0:
+        print("Welcome back. Please log in using your PiLocks account.")
+        userNameLoggingIn = input(f"Username\n{Fore.CYAN}>{Fore.RESET}")
+        userPasswordLoggingIn = input(f"Password\n{Fore.CYAN}>{Fore.RESET}")
+        checkAuthentication(userNameLoggingIn, userPasswordLoggingIn)

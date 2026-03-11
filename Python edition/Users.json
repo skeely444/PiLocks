@@ -1,14 +1,8 @@
 [
   {
-    "Name": "Tim",
-    "Password": "$2b$12$KWkUJYKxOGVF5dGZmqbXiu4szlC4J41QqZNWQO5f5ychVdyafMZH6",
+    "Name": "mauro",
+    "Password": "$2b$12$UpSBLb8HEyhq1MVMrrgGGuIftjE0KeTUdEl82l4TMqN7bTQ3IZGf6",
     "Role": "Owner",
     "Id": 0
-  },
-  {
-    "Name": "Tom",
-    "Password": "$2b$12$pUYLaK9s81KHbOxB8jsN.Op.ub.cFES3O1qJN46HFfxAEsGoRGwHW",
-    "Role": "User",
-    "Id": 1
   }
 ]
