@@ -13,12 +13,10 @@ import colorama
 from colorama import Fore, Back, Style
 colorama.init(autoreset=True)
 
-DateAndTime = datetime.datetime.now().strftime("%x") + ' ' + datetime.datetime.now().strftime("%X")
+DateAndTime = datetime.datetime.now().strftime("%X")
 
 UserList = []
 Actions = []
-UserDidAction = []
-ActionTimeStamp = []
 JSONifiedUser = ''
 authorized = False
 userNameLoggingIn = ''
@@ -49,6 +47,8 @@ def createUser(name, password, role):
         decodedHashedPassword = hashedPassword.decode("utf-8")
         UserList.append({"Name": name, "Password": decodedHashedPassword, "Role": role, "Id": id})
         saveUsersToDataFile()
+        print(f"{Fore.GREEN}User created succesfully.{Fore.RESET}")
+        time.sleep(1.0)
 
 def removeUser(toRemove):
     found = False
@@ -61,6 +61,28 @@ def removeUser(toRemove):
             break
     print(f"{Fore.RED}Sorry, this user doesn't exist or to owner account has been provided. Please try again...")
     time.sleep(1.0)
+
+def saveAction(action, preformer):
+    global Actions
+    Actions.append({"Action": action, "User": preformer, "Time": DateAndTime})
+    print(Actions)
+    time.sleep(5.0)
+    with open("Logs.json", "w") as json_file:
+        json.dump(Actions, json_file, indent=2)
+
+def loadAction():
+    global Actions
+    Actions.clear()
+    try:
+        with open("Logs.json", "r") as json_file:
+            Actions = json.load(json_file)
+    except:
+        return
+    for index in range(len(Actions)):
+        if Actions[index]["Action"] == "Add":
+            print(f" [{Actions[index]["Time"]}] {Actions[index]["User"]} {Fore.GREEN}added{Fore.RESET} a user.")
+        elif Actions[index]["Action"] == "Remove":
+            print(f" [{Actions[index]["Time"]}] {Actions[index]["User"]} {Fore.RED}removed{Fore.RESET} a user.")
 
 def saveUsersToDataFile():
     with open("Users.json", "w") as json_file:
@@ -105,7 +127,7 @@ while (use):
     """)
     loadUsersToDataFile()
     if len(UserList) == 0:
-        print('Welcome to the PiLocks dashboard. Please start by making an account.')
+        print('Welcome to the PiLocks dashboard. Please start by making an account.\n')
         toBeCalled = input(f"Wich name would you like to use? \n{Fore.CYAN}>{Fore.RESET}")
         passwordToUse = input(f"Wich password would you like to use? \n{Fore.CYAN}>{Fore.RESET}")
         userRole = "Owner"
@@ -124,9 +146,27 @@ while (use):
                            ------------------------------------------------------------------------------------
             """)
             print(f"Logged in as {userNameLoggingIn}")
-            input()
+            print("\nLogs:")
+            loadAction()
+            print("\nAvailible actions:")
+            print(f" 1) {Style.BRIGHT}Add{Style.RESET_ALL} user")
+            print(f" 2) {Style.BRIGHT}Remove{Style.RESET_ALL} user")
+            print(f" 3) {Style.BRIGHT}View{Style.RESET_ALL} users")
+            print(f" 4) {Style.BRIGHT}Logout{Style.RESET_ALL}")
+            print(f" 5) {Style.BRIGHT}Exit{Style.RESET_ALL}")
+            action = input(f"\n{Fore.CYAN}>{Fore.RESET}")
+            if action == "Add":
+                nameToCreate = input(f"\nWhat is the name of the user?\n{Fore.CYAN}>{Fore.RESET}")
+                passwordToCreate = input(f"Which password will the user use?\n{Fore.CYAN}>{Fore.RESET}")
+                roleToCreate = input(f"Which role(Admin/User) does this user fullfill?\n{Fore.CYAN}>{Fore.RESET}")
+                createUser(nameToCreate, passwordToCreate, roleToCreate)
+                saveAction(action, userNameLoggingIn)
+            elif action == "Remove":
+                nameToRemove = input(f"\nWhich user do you wan't to remove?\n{Fore.CYAN}>{Fore.RESET}")
+                removeUser(nameToRemove)
+                saveAction(action, userNameLoggingIn)
     elif len(UserList) > 0:
-        print("Welcome back. Please log in using your PiLocks account.")
+        print("Welcome back. Please log in using your PiLocks account.\n")
         userNameLoggingIn = input(f"Username\n{Fore.CYAN}>{Fore.RESET}")
         userPasswordLoggingIn = input(f"Password\n{Fore.CYAN}>{Fore.RESET}")
         checkAuthentication(userNameLoggingIn, userPasswordLoggingIn)
