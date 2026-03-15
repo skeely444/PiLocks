@@ -19,6 +19,7 @@ UserList = []
 Actions = []
 JSONifiedUser = ''
 authorized = False
+succes = False
 userNameLoggingIn = ''
 userPasswordLoggingIn = ''
 
@@ -26,6 +27,7 @@ def clearScreen():
     os.system('cls' if os.name == 'nt' else 'clear')
 
 def createUser(name, password, role):
+    global succes
     exist = False
     for index in range(len(UserList)):
         if name == UserList[index]["Name"] or (UserList[index]["Role"] == "Owner" and role == "Owner"):
@@ -36,6 +38,7 @@ def createUser(name, password, role):
     if exist:
         print(f"{Fore.RED}Sorry, this user already exists or an owner has already been created. Please use a different name or different role.")
         time.sleep(1.0)
+        succes = False
     else:
         if len(UserList) == 0:
             id = 0
@@ -49,6 +52,7 @@ def createUser(name, password, role):
         saveUsersToDataFile()
         print(f"{Fore.GREEN}User created succesfully.{Fore.RESET}")
         time.sleep(1.0)
+        succes = True
 
 def removeUser(toRemove):
     found = False
@@ -56,17 +60,17 @@ def removeUser(toRemove):
         if UserList[index]["Name"] == toRemove and not UserList[index]["Role"] == "Owner":
             UserList.pop(index)
             saveUsersToDataFile()
+            succes = True
             return
         else:    
             break
     print(f"{Fore.RED}Sorry, this user doesn't exist or to owner account has been provided. Please try again...")
     time.sleep(1.0)
+    succes = False
 
 def saveAction(action, preformer):
     global Actions
     Actions.append({"Action": action, "User": preformer, "Time": DateAndTime})
-    print(Actions)
-    time.sleep(5.0)
     with open("Logs.json", "w") as json_file:
         json.dump(Actions, json_file, indent=2)
 
@@ -152,19 +156,33 @@ while (use):
             print(f" 1) {Style.BRIGHT}Add{Style.RESET_ALL} user")
             print(f" 2) {Style.BRIGHT}Remove{Style.RESET_ALL} user")
             print(f" 3) {Style.BRIGHT}View{Style.RESET_ALL} users")
-            print(f" 4) {Style.BRIGHT}Logout{Style.RESET_ALL}")
-            print(f" 5) {Style.BRIGHT}Exit{Style.RESET_ALL}")
+            print(f" 4) {Style.BRIGHT}Monitor{Style.RESET_ALL} mode")
+            print(f" 5) {Style.BRIGHT}Logout{Style.RESET_ALL}")
+            print(f" 6) {Style.BRIGHT}Exit{Style.RESET_ALL}")
             action = input(f"\n{Fore.CYAN}>{Fore.RESET}")
             if action == "Add":
                 nameToCreate = input(f"\nWhat is the name of the user?\n{Fore.CYAN}>{Fore.RESET}")
                 passwordToCreate = input(f"Which password will the user use?\n{Fore.CYAN}>{Fore.RESET}")
                 roleToCreate = input(f"Which role(Admin/User) does this user fullfill?\n{Fore.CYAN}>{Fore.RESET}")
                 createUser(nameToCreate, passwordToCreate, roleToCreate)
-                saveAction(action, userNameLoggingIn)
+                if succes:
+                    saveAction(action, userNameLoggingIn)
             elif action == "Remove":
                 nameToRemove = input(f"\nWhich user do you wan't to remove?\n{Fore.CYAN}>{Fore.RESET}")
                 removeUser(nameToRemove)
+                if succes:
+                    saveAction(action, userNameLoggingIn)
+            elif action == "View":
+                clearScreen()
+                for index in range(len(UserList)):
+                    print(f"{UserList[index]["Name"]} {UserList[index]["Role"]}")
+                time.sleep(5.0)
                 saveAction(action, userNameLoggingIn)
+            elif action == "Logout":
+                authorized = False
+                userNameLoggingIn = ''
+            elif action == "Exit":
+                use = False
     elif len(UserList) > 0:
         print("Welcome back. Please log in using your PiLocks account.\n")
         userNameLoggingIn = input(f"Username\n{Fore.CYAN}>{Fore.RESET}")
