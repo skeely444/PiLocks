@@ -3,15 +3,24 @@ import json
 import os
 import time
 import datetime
-import random
+import customtkinter
+from pathlib import Path
 
 import bcrypt as bc
 import pandas as pd
-import watchdog.observers as wd
-import watchdog.events as we
+from watchdog.observers import Observer
+from watchdog.events import FileSystemEventHandler
 import colorama
 from colorama import Fore, Back, Style
 colorama.init(autoreset=True)
+
+class MyHandler(FileSystemEventHandler):
+    def on_modified(self, event):
+        if event.src_path.endswith("Logs.json"):
+            clearScreen()
+            print("Press any key to exit\n")
+            loadAction()
+            time.sleep(5.0)
 
 DateAndTime = datetime.datetime.now().strftime("%X")
 
@@ -55,18 +64,24 @@ def createUser(name, password, role):
         succes = True
 
 def removeUser(toRemove):
+    global succes
+    global found
     found = False
     for index in range(len(UserList)):
         if UserList[index]["Name"] == toRemove and not UserList[index]["Role"] == "Owner":
             UserList.pop(index)
             saveUsersToDataFile()
             succes = True
-            return
-        else:    
-            break
-    print(f"{Fore.RED}Sorry, this user doesn't exist or to owner account has been provided. Please try again...")
-    time.sleep(1.0)
-    succes = False
+            found = True
+            print(f"{Fore.GREEN}User removed succesfully.")
+            time.sleep(1.0)
+            return True
+    if not found:
+        print(f"{Fore.RED}Sorry, this user doesn't exist or to owner account has been provided. Please try again...")
+        time.sleep(1.0)
+        succes = False
+    else:
+        return
 
 def saveAction(action, preformer):
     global Actions
@@ -178,6 +193,14 @@ while (use):
                     print(f"{UserList[index]["Name"]} {UserList[index]["Role"]}")
                 time.sleep(5.0)
                 saveAction(action, userNameLoggingIn)
+            elif action == "Monitor":
+                path = Path(".")
+                observer = Observer()
+                handler = MyHandler()
+                observer.schedule(handler, path)
+                observer.start()
+                wait = input()
+                observer.stop()
             elif action == "Logout":
                 authorized = False
                 userNameLoggingIn = ''
